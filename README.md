@@ -1,9 +1,7 @@
 [![Builds](https://github.com/alan-j316/rasterizer/actions/workflows/builds.yml/badge.svg)](https://github.com/alan-j316/rasterizer/actions/workflows/builds.yml)
 
-# Modern C++ Project Template
-
-A high-performance boilerplate for C++ development featuring CMake integration, Google Test (GTest) for unit testing,
-and Google Benchmark for performance analysis.
+# Colloid
+Software rasterizer.
 
 # Prerequisites
 
