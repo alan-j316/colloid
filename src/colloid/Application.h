@@ -33,7 +33,7 @@ namespace rasterizer
         SDL_Window* _window{ nullptr };
         SDL_GPUDevice* _device;
         bool _isRunning{ false };
-        int _width{ 1280 }, _height{ 720 }, _colorChannels{ 4 }; // TODO: Update to use ctd.
+        int _width{ 1280 }, _height{ 720 }, _colorChannels{ 4 };
         Renderer _renderer;
     };
 
