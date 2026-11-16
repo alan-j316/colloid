@@ -10,7 +10,7 @@
  */
 
 
-#include "rasterizer/Mesh.h"
+#include "colloid/Mesh.h"
 
 #include <charconv>
 #include <cstdlib>

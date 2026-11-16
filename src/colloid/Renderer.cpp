@@ -9,6 +9,7 @@
  */
 
 #include "Renderer.h"
+#include "Mesh.h"
 
 namespace rasterizer
 {

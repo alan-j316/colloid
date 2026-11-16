@@ -12,7 +12,7 @@
 
 #include "Mesh.h"
 #include "parsers/ObjectParser.h"
-#include "rasterizer/Renderer.h"
+#include "colloid/Renderer.h"
 
 #include <SDL3/SDL.h>
 #include <imgui.h>

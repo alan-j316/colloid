@@ -9,7 +9,8 @@
  * @copyright Copyright (c) 2026 Alan Abraham P Kochumon
  */
 
-#include "rasterizer/parsers/ObjectParser.h"
+#include "Mesh.h"
+#include "colloid/parsers/ObjectParser.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -20,14 +21,10 @@ namespace rasterizer
     inline constexpr auto EPSILON = 1e-6;
 
     struct BarycentricCoordinates
-    {
-        float alpha, beta, gamma;
-    };
+    { float alpha, beta, gamma; };
 
     struct BoundingBox
-    {
-        size_t top, left, right, bottom;
-    };
+    { size_t top, left, right, bottom; };
     class Renderer
     {
     public:
@@ -200,11 +197,24 @@ namespace rasterizer
 
         // TODO: REMOVE TEMPORARY METHOD
         flcn::Mat4F makeOrtho(const float top, const float bottom, const float left, const float right,
-                                     const float near, const float far)
+                              const float near, const float far)
         {
-            return flcn::Mat4F(2 / (right - left), 0, 0, -(right + left) / (right - left), 0, 2 / (top - bottom), 0,
-                               -(top + bottom) / (top - bottom), 0, 0, -2 / (far - near), -(far + near) / (far - near),
-                               0, 0, 0, 1);
+            return { 2 / (right - left),
+                     0,
+                     0,
+                     -(right + left) / (right - left),
+                     0,
+                     2 / (top - bottom),
+                     0,
+                     -(top + bottom) / (top - bottom),
+                     0,
+                     0,
+                     -2 / (far - near),
+                     -(far + near) / (far - near),
+                     0,
+                     0,
+                     0,
+                     1 };
         }
 
         struct VertexArgs

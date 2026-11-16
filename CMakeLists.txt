@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
-project(Rasterizer LANGUAGES CXX)
+project(Colloid LANGUAGES CXX)
 enable_testing()
 
 # Turn on solution folders

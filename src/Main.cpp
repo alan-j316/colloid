@@ -9,7 +9,7 @@
  */
 
 
-#include "rasterizer/Application.h"
+#include "colloid/Application.h"
 
 int main()
 {

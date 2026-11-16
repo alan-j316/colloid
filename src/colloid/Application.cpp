@@ -9,7 +9,7 @@
  */
 
 
-#include "rasterizer/Application.h"
+#include "colloid/Application.h"
 
 #include <SDL3/SDL_gpu.h>
 #include <backends/imgui_impl_sdl3.h>
