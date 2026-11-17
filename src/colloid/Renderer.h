@@ -268,6 +268,16 @@ namespace rasterizer
          * @param mesh The mesh to render.
          */
         void render(const Mesh& mesh, [[maybe_unused]] float deg) noexcept;
+
+        // TODO: REPLACE WITH FLCN ONE
+        flcn::Mat4F makePersp(const float aspect, const float fov, const float far, const float near)
+        {
+            const float s1 = 1 / (std::tan(fov * 0.5f) * aspect);
+            const float s2 = 1 / std::tan(fov * 0.5f);
+            return flcn::Mat4F{ s1, 0, 0,  0, 0, -s2, 0, 0, 0, 0, -far / (far - near), -(far * near) / (far - near),
+                                0,  0, -1, 0 };
+        }
+        // TODO: REPLACE WITH FLCN END
     };
 
 
