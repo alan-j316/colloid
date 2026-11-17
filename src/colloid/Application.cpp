@@ -45,7 +45,7 @@ namespace rasterizer
         _device = SDL_CreateGPUDevice(shaderFormat, true, nullptr);
         if (_device == nullptr)
         {
-            SDL_Log("Fialed to create GPU Device: %s", SDL_GetError());
+            SDL_Log("Failed to create GPU Device: %s", SDL_GetError());
         }
 
         if (!SDL_ClaimWindowForGPUDevice(_device, _window))

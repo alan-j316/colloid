@@ -9,12 +9,15 @@
  */
 
 #include "Renderer.h"
+
 #include "Mesh.h"
+
+#include <algorithm>
 
 namespace rasterizer
 {
     template <typename T>
-    void Renderer::renderTriangleWireframe(const flcn::Vec2<T>& v0, const flcn::Vec2<T>& v1, const flcn::Vec2<T>& v2)
+    void Renderer::renderTriangleWireframe(const flcn::CVec2<T>& v0, const flcn::CVec2<T>& v1, const flcn::CVec2<T>& v2)
     {
         renderLine(v0.x(), v0.y(), v1.x(), v1.y(), 0xff, 0xff, 0xff, 0xff);
         renderLine(v1.x(), v1.y(), v2.x(), v2.y(), 0xff, 0xff, 0xff, 0xff);
@@ -83,7 +86,7 @@ namespace rasterizer
             const auto bias1 = isTopLeft1 * EPSILON;
             const auto bias2 = isTopLeft2 * EPSILON;
 
-            // Calculate the barycenter coordinate for the the first point
+            // Calculate the barycenter coordinate for the first point
             // F01(P) = (a_y - b_y) * Px + (b_x - a_x) * Py + (a_x * b_y - a_y * b_x)
             // F01(P) =        A_01 * Px +        B_01 * Py + C01
             // Permutation F01, F12, F20
@@ -117,10 +120,8 @@ namespace rasterizer
                         continue;
                     }
 
-                    const auto [alpha, beta, gamma] =
-                        computeBaryCentricCoordinates(projV0, projV1, projV2, point, triArea);
+                    const auto currentPixelDepth = w0 * v0.z() + w1 * v1.z() + w2 * v2.z();
 
-                    const auto currentPixelDepth = alpha * v0.z() + beta * v1.z() + gamma * v2.z();
 
                     // A comparison of anything other than 0.0f, like 1e-5 or 1e-10 will cause visual glitches
                     const bool eC0 = w0 - bias0 >= 0.0f;
@@ -136,11 +137,13 @@ namespace rasterizer
                     // auto w12    = edgeCross(projV2, projV0, point);
                     // auto w22    = edgeCross(projV0, projV2, point);
                     // Edge cross && Depth buffer-based culling
-                    if (w0 >= 0.0 && w1 >= 0.0 && w2 >= 0.0)
+                    // std::cout << "Rendering: Excluded<" << currentPixelDepth << ">\n";
+                    if (w0 >= 0.0 && w1 >= 0.0 && w2 >= 0.0 && currentPixelDepth > depthBuffer[offset])
                     // if (eC0 && eC1 && eC2 && currentPixelDepth > depthBuffer[offset])
                     {
                         // Color Rendering
                         putPixel(colorOffset, r, g, b, a);
+                        // std::cout << "Rendering: Depth<" << currentPixelDepth << ">\n";
 
                         // Update depth buffer
                         depthBuffer[offset] = currentPixelDepth;
@@ -281,12 +284,16 @@ namespace rasterizer
 
     void Renderer::render(const Mesh& mesh, const float deg) noexcept
     {
-        std::vector<flcn::Vec3<float>> vertices{ mesh.vertices.size() };
+        std::vector<flcn::Vec3<float>> vertices(mesh.vertices.begin(), mesh.vertices.end());
 
-        std::ranges::transform(mesh.vertices, std::inserter(vertices, vertices.begin()),
-                               [mesh, this, deg](const flcn::Vec3<float> vertex) {
-                                   return perVertex(vertex, {});
-                               });
+        auto view       = flcn::Mat4F::identity();
+        view(2, 3)      = -2.5;
+        const auto proj = makeOrtho(-1, 1, -1, 1, -1, 1);
+
+        for (auto& vert : vertices)
+        {
+            vert = perVertex(vert, { .view = view, .projection = proj });
+        }
 
         [[maybe_unused]] size_t i = 0;
         for (const auto& index : mesh.indices)

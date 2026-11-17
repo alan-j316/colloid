@@ -70,7 +70,7 @@ namespace rasterizer
          * @param v2 The last vertex of the triangle.
          */
         template <typename T>
-        void renderTriangleWireframe(const flcn::Vec2<T>& v0, const flcn::Vec2<T>& v1, const flcn::Vec2<T>& v2);
+        void renderTriangleWireframe(const flcn::CVec2<T>& v0, const flcn::CVec2<T>& v1, const flcn::CVec2<T>& v2);
 
 
         /**
@@ -219,18 +219,26 @@ namespace rasterizer
 
         struct VertexArgs
         {
-            // TODO: Fill with arguments.
+            flcn::Mat4F view;
+            flcn::Mat4F projection;
         };
 
         // Vertex Shader
         flcn::Vec3F perVertex(const flcn::Vec3F& vertex, const VertexArgs& args)
         {
-            const auto proj = makeOrtho(-1, 1, -1, 1, 0, 1);
             // Projection to NDC
-            auto vec = proj * flcn::Vec4(vertex, 1.0f);
+            auto vec = args.projection * args.view * flcn::Vec4(vertex, 1.0f);
+            vec.z() = (vec.z() + 1) * 0.5f;
+            // TODO: Move from here Perspective divide
+            if (vec.z() >= flcn::Config::EPSILON<float>)
+            {
+                vec.x() /= vec.z();
+                vec.y() /= vec.z();
+            }
+            // TODO: END MOVE
             // To screen space/viewport space
-            vec.x() = (1 - vec.x()) * width * 0.5f;
-            vec.y() = (vec.y() + 1) * height * 0.5f;
+            vec.x() = (1 - vec.x()) * static_cast<float>(width) * 0.5f;
+            vec.y() = (vec.y() + 1) * static_cast<float>(height) * 0.5f;
             return vec.swizzle<flcn::axis::X, flcn::axis::Y, flcn::axis::Z>();
         }
 
@@ -239,6 +247,8 @@ namespace rasterizer
         {
             // TODO: Fill with arguments.};
         };
+
+
         /**
          * Perform transformation on a per-pixel level.
          * @param pixel The pixel to process.
