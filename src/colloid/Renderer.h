@@ -24,7 +24,12 @@ namespace rasterizer
     { float alpha, beta, gamma; };
 
     struct BoundingBox
-    { size_t top, left, right, bottom; };
+    { uint32_t top, left, right, bottom; };
+
+    struct FPBoundingBox
+    { float top, left, right, bottom; };
+
+
     class Renderer
     {
     public:
@@ -166,7 +171,8 @@ namespace rasterizer
         //         (vec.y() + 1) * 0.5f * height,
         //     };
         // }
-
+        void renderTriangle(const flcn::Vec3F& v0, const flcn::Vec3F& v1, const flcn::Vec3F& v2, uint8_t r, uint8_t g,
+                            uint8_t b, uint8_t a) noexcept;
 
         /**
          * Compute approximate the bounding box of the triangle.
@@ -219,6 +225,7 @@ namespace rasterizer
 
         struct VertexArgs
         {
+            flcn::Mat4F model;
             flcn::Mat4F view;
             flcn::Mat4F projection;
         };
@@ -227,15 +234,12 @@ namespace rasterizer
         flcn::Vec3F perVertex(const flcn::Vec3F& vertex, const VertexArgs& args)
         {
             // Projection to NDC
-            auto vec = args.projection * args.view * flcn::Vec4(vertex, 1.0f);
-            vec.z() = (vec.z() + 1) * 0.5f;
-            // TODO: Move from here Perspective divide
-            if (vec.z() >= flcn::Config::EPSILON<float>)
-            {
-                vec.x() /= vec.z();
-                vec.y() /= vec.z();
-            }
-            // TODO: END MOVE
+            auto vec = args.projection * args.view * args.model * flcn::Vec4(vertex, 1.0f);
+            // Perspective Divide
+            const auto w = vec.w();
+            vec /= w;
+            vec.w() = w;
+
             // To screen space/viewport space
             vec.x() = (1 - vec.x()) * static_cast<float>(width) * 0.5f;
             vec.y() = (vec.y() + 1) * static_cast<float>(height) * 0.5f;
@@ -274,8 +278,12 @@ namespace rasterizer
         {
             const float s1 = 1 / (std::tan(fov * 0.5f) * aspect);
             const float s2 = 1 / std::tan(fov * 0.5f);
-            return flcn::Mat4F{ s1, 0, 0,  0, 0, -s2, 0, 0, 0, 0, -far / (far - near), -(far * near) / (far - near),
-                                0,  0, -1, 0 };
+            return flcn::Mat4F{
+                s1, 0, 0,  0,
+                0, -s2, 0, 0,
+                0, 0, -far / (far - near), -(far * near) / (far - near),
+                0,  0, -1, 0
+            };
         }
         // TODO: REPLACE WITH FLCN END
     };

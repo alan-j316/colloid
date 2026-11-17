@@ -34,10 +34,144 @@ namespace rasterizer
         return edge0.cross(edge1);
     }
 
+    //
+    // template <typename T>
+    // void Renderer::renderTriangle(const flcn::Vec3<T>& v0, const flcn::Vec3<T>& v1, const flcn::Vec3<T>& v2,
+    //                               const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) const noexcept
+    // {
+    //     const auto projV0 = v0.template swizzle<flcn::axis::X, flcn::axis::Y>();
+    //     const auto projV1 = v1.template swizzle<flcn::axis::X, flcn::axis::Y>();
+    //     const auto projV2 = v2.template swizzle<flcn::axis::X, flcn::axis::Y>();
+    //
+    //
+    //     // Calculate the bounding box of the triangle
+    //     // (minX, minY)--------
+    //     //       |____________|
+    //     //       |\ \ \ \ \ \/|
+    //     //       | \ \ \ \ \/ |
+    //     //       |  \ \ \ \/  |
+    //     //       |   \ \ \/   |
+    //     //       |    \ \/    |
+    //     //       |     \/     |
+    //     //       --------(maxX, maxY)
+    //     auto bb = computeBoundingBox(projV0, projV1, projV2);
+    //
+    //     // Clip against screen bounds
+    //     bb.left   = std::max(bb.left, 0ull);
+    //     bb.top    = std::max(bb.top, 0ull);
+    //     bb.right  = std::min(bb.right, static_cast<size_t>(width - 1));
+    //     bb.bottom = std::min(bb.bottom, static_cast<size_t>(height - 1));
+    //
+    //
+    //     // Cross between two edges, v0v1(v1 - v0) and v0v2(v2 - v0)
+    //     const auto triArea = (projV1 - projV0).cross(projV2 - projV0) * 0.5f;
+    //
+    //     // Backface culling
+    //     if (triArea < 0.0f) // Triangle is inverted or less than 1 px
+    //     {
+    //         return;
+    //     }
+    //
+    //     // Compute top left for each edge (vertex pair)
+    //     const auto isTopLeft0 = isTopLeftEdge(projV0, projV1);
+    //     const auto isTopLeft1 = isTopLeftEdge(projV1, projV2);
+    //     const auto isTopLeft2 = isTopLeftEdge(projV2, projV0);
+    //
+    //     const auto bias0 = isTopLeft0 * EPSILON;
+    //     const auto bias1 = isTopLeft1 * EPSILON;
+    //     const auto bias2 = isTopLeft2 * EPSILON;
+    //
+    //     // Calculate the barycenter coordinate for the first point
+    //     // F01(P) = (a_y - b_y) * Px + (b_x - a_x) * Py + (a_x * b_y - a_y * b_x)
+    //     // F01(P) =        A_01 * Px +        B_01 * Py + C01
+    //     // Permutation F01, F12, F20
+    //     const auto a01 = v0.y() - v1.y();
+    //     const auto b01 = v1.x() - v0.x();
+    //     const auto a12 = v1.y() - v2.y();
+    //     const auto b12 = v2.x() - v1.x();
+    //     const auto a20 = v2.y() - v0.y();
+    //     const auto b20 = v0.x() - v2.x();
+    //
+    //     const auto p0 = flcn::CVec2F(bb.left, bb.top);
+    //     auto w0Row    = edgeCross(projV0, projV1, p0);
+    //     auto w1Row    = edgeCross(projV1, projV2, p0);
+    //     auto w2Row    = edgeCross(projV2, projV0, p0);
+    //
+    //
+    //     // Looping in reverse order for better cache locality
+    //     for (auto y = bb.top; y <= bb.bottom; ++y)
+    //     {
+    //         auto w0 = w0Row;
+    //         auto w1 = w1Row;
+    //         auto w2 = w2Row;
+    //         for (auto x = bb.left; x <= bb.right; ++x)
+    //         {
+    //             const auto offset      = y * static_cast<size_t>(width) + x;
+    //             const auto colorOffset = static_cast<size_t>(colorChannels) * offset;
+    //             const auto point       = flcn::CVec2F(x, y);
+    //
+    //             if (offset > static_cast<size_t>(width * height))
+    //             {
+    //                 continue;
+    //             }
+    //
+    //             const auto currentPixelDepth = (w0 * v2.z() + w1 * v0.z() + w2 * v1.z()) / (w0 + w1 + w2);
+    //
+    //
+    //             // A comparison of anything other than 0.0f, like 1e-5 or 1e-10 will cause visual glitches
+    //             const bool eC0 = w0 - bias0 >= 0.0f;
+    //             const bool eC1 = w1 - bias1 >= 0.0f;
+    //             const bool eC2 = w2 - bias2 >= 0.0f;
+    //             // if (w0 > 0.0 && w1 > 0.0 && w2 > 0.0)
+    //             // {
+    //             //     std::cout << std::format("w0 {} w1 {} w2 {}\n", w0, w1, w2);
+    //             // }
+    //
+    //             // putPixel(colorOffset, r, g, b, a);
+    //             // auto w02    = edgeCross(projV1, projV2, point);
+    //             // auto w12    = edgeCross(projV2, projV0, point);
+    //             // auto w22    = edgeCross(projV0, projV2, point);
+    //             // Edge cross && Depth buffer-based culling
+    //             // std::cout << "Rendering: Excluded<" << currentPixelDepth << ">\n";
+    //             if (w0 >= 0.0 && w1 >= 0.0 && w2 >= 0.0 && currentPixelDepth >= depthBuffer[offset])
+    //             // if (eC0 && eC1 && eC2 && currentPixelDepth > depthBuffer[offset])
+    //             {
+    //                 // Color Rendering
+    //                 putPixel(colorOffset, r, g, b, a);
+    //                 // std::cout << "Rendering: Depth<" << currentPixelDepth << ">\n";
+    //
+    //                 // Update depth buffer
+    //                 depthBuffer[offset] = currentPixelDepth;
+    //
+    //                 // Depth buffer rendering
+    //                 const auto depthColor = static_cast<uint8_t>(depthBuffer[offset] * 255);
+    //                 putPixel(colorOffset, depthColor, depthColor, depthColor);
+    //             }
+    //
+    //             w0 += a01;
+    //             w1 += a12;
+    //             w2 += a20;
+    //         }
+    //         w0Row += b01;
+    //         w1Row += b12;
+    //         w2Row += b20;
+    //     }
+    // }
+    //
 
-    template <typename T>
-    void Renderer::renderTriangle(const flcn::Vec3<T>& v0, const flcn::Vec3<T>& v1, const flcn::Vec3<T>& v2,
-                                  const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) const noexcept
+
+    BoundingBox getBounds(const flcn::Vec3F& v0, const flcn::Vec3F& v1, const flcn::Vec3F& v2) noexcept
+    {
+        return BoundingBox{
+            .top    = static_cast<uint32_t>(std::min({ v0.y(), v1.y(), v2.y() })),
+            .left   = static_cast<uint32_t>(std::min({ v0.x(), v1.x(), v2.x() })),
+            .right  = static_cast<uint32_t>(std::max({ v0.x(), v1.x(), v2.x() })),
+            .bottom = static_cast<uint32_t>(std::max({ v0.y(), v1.y(), v2.y() })),
+        };
+    }
+
+    void Renderer::renderTriangle(const flcn::Vec3F& v0, const flcn::Vec3F& v1, const flcn::Vec3F& v2, const uint8_t r,
+                                  const uint8_t g, const uint8_t b, const uint8_t a) noexcept
     {
         const auto projV0 = v0.template swizzle<flcn::axis::X, flcn::axis::Y>();
         const auto projV1 = v1.template swizzle<flcn::axis::X, flcn::axis::Y>();
@@ -54,13 +188,13 @@ namespace rasterizer
         //       |    \ \/    |
         //       |     \/     |
         //       --------(maxX, maxY)
-        auto bb = computeBoundingBox(projV0, projV1, projV2);
+        auto bb = getBounds(v0, v1, v2);
 
         // Clip against screen bounds
-        bb.left   = std::max(bb.left, 0ull);
-        bb.top    = std::max(bb.top, 0ull);
-        bb.right  = std::min(bb.right, static_cast<size_t>(width - 1));
-        bb.bottom = std::min(bb.bottom, static_cast<size_t>(height - 1));
+        bb.left   = std::max(bb.left, 0u);
+        bb.top    = std::max(bb.top, 0u);
+        bb.right  = std::min(bb.right, static_cast<uint32_t>(width - 1));
+        bb.bottom = std::min(bb.bottom, static_cast<uint32_t>(height - 1));
 
 
         // Cross between two edges, v0v1(v1 - v0) and v0v2(v2 - v0)
@@ -92,7 +226,7 @@ namespace rasterizer
         const auto a20 = v2.y() - v0.y();
         const auto b20 = v0.x() - v2.x();
 
-        const auto p0 = flcn::CVec2F(bb.left, bb.top);
+        const auto p0 = flcn::CVec2F(static_cast<float>(bb.left), static_cast<float>(bb.top));
         auto w0Row    = edgeCross(projV0, projV1, p0);
         auto w1Row    = edgeCross(projV1, projV2, p0);
         auto w2Row    = edgeCross(projV2, projV0, p0);
@@ -108,9 +242,8 @@ namespace rasterizer
             {
                 const auto offset      = y * static_cast<size_t>(width) + x;
                 const auto colorOffset = static_cast<size_t>(colorChannels) * offset;
-                const auto point       = flcn::CVec2F(x, y);
 
-                if (offset > static_cast<size_t>(width * height))
+                if (offset > static_cast<uint32_t>(width * height))
                 {
                     continue;
                 }
@@ -133,7 +266,7 @@ namespace rasterizer
                 // auto w22    = edgeCross(projV0, projV2, point);
                 // Edge cross && Depth buffer-based culling
                 // std::cout << "Rendering: Excluded<" << currentPixelDepth << ">\n";
-                if (w0 >= 0.0 && w1 >= 0.0 && w2 >= 0.0 && currentPixelDepth >= depthBuffer[offset])
+                if (w0 >= 0.0 && w1 >= 0.0 && w2 >= 0.0 && currentPixelDepth > depthBuffer[offset])
                 // if (eC0 && eC1 && eC2 && currentPixelDepth > depthBuffer[offset])
                 {
                     // Color Rendering
@@ -144,7 +277,7 @@ namespace rasterizer
                     depthBuffer[offset] = currentPixelDepth;
 
                     // Depth buffer rendering
-                    const auto depthColor = static_cast<uint8_t>(depthBuffer[offset] * 255);
+                    const auto depthColor = static_cast<uint8_t>(depthBuffer[offset] * 50);
                     putPixel(colorOffset, depthColor, depthColor, depthColor);
                 }
 
@@ -157,7 +290,6 @@ namespace rasterizer
             w2Row += b20;
         }
     }
-
 
 
 
@@ -270,27 +402,32 @@ namespace rasterizer
                                              const flcn::CVec2F& v2) noexcept
     {
         return BoundingBox{
-            .top    = static_cast<size_t>(std::min({ v0.y(), v1.y(), v2.y() })),
-            .left   = static_cast<size_t>(std::min({ v0.x(), v1.x(), v2.x() })),
-            .right  = static_cast<size_t>(std::max({ v0.x(), v1.x(), v2.x() })),
-            .bottom = static_cast<size_t>(std::max({ v0.y(), v1.y(), v2.y() })),
+            .top    = static_cast<uint32_t>(std::min({ v0.y(), v1.y(), v2.y() })),
+            .left   = static_cast<uint32_t>(std::min({ v0.x(), v1.x(), v2.x() })),
+            .right  = static_cast<uint32_t>(std::max({ v0.x(), v1.x(), v2.x() })),
+            .bottom = static_cast<uint32_t>(std::max({ v0.y(), v1.y(), v2.y() })),
         };
     }
 
-
+static float rot = 0.0f;
     void Renderer::render(const Mesh& mesh, const float deg) noexcept
     {
         std::vector<flcn::Vec3<float>> vertices(mesh.vertices.begin(), mesh.vertices.end());
 
         auto view       = flcn::Mat4F::identity();
-        view(2, 3)      = -2.5;
-        const auto proj = makePersp(1280.0f / 720.0f, 1.4, 1000.0f, 0.1f);
+        view(2, 3)      = -4;
+        const auto proj = makePersp(1280.0f / 720.0f, 1.4, 100.0f, 0.1f);
         // const auto proj = makeOrtho(-1, 1, -1, 1, -1, 1);
-
+auto model = flcn::Mat4F::makeRotationY(rot);
+        rot += 0.01f;
+        model(1, 3) = -1;
         for (auto& vert : vertices)
         {
-            vert = perVertex(vert, { .view = view, .projection = proj });
+            std::cout << vert;
+            vert = perVertex(vert, { .model = model, .view = view, .projection = proj });
+            std::cout << vert << '\n';
         }
+
 
         [[maybe_unused]] size_t i = 0;
         for (const auto& index : mesh.indices)
