@@ -11,6 +11,7 @@
 #include "Renderer.h"
 
 #include "Mesh.h"
+#include "Primitives.h"
 
 #include <algorithm>
 
@@ -266,7 +267,8 @@ namespace rasterizer
                 // auto w22    = edgeCross(projV0, projV2, point);
                 // Edge cross && Depth buffer-based culling
                 // std::cout << "Rendering: Excluded<" << currentPixelDepth << ">\n";
-                if ((std::bit_cast<int32_t>(w0) | std::bit_cast<int32_t>(w1) | std::bit_cast<int32_t>(w2)) >= 0 && currentPixelDepth >= depthBuffer[offset])
+                if ((std::bit_cast<int32_t>(w0) | std::bit_cast<int32_t>(w1) | std::bit_cast<int32_t>(w2)) >= 0 &&
+                    currentPixelDepth >= depthBuffer[offset])
                 // if (eC0 && eC1 && eC2 && currentPixelDepth > depthBuffer[offset])
                 {
                     // Color Rendering
