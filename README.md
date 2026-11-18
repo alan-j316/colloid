@@ -1,7 +1,12 @@
-[![Builds](https://github.com/alan-j316/rasterizer/actions/workflows/builds.yml/badge.svg)](https://github.com/alan-j316/rasterizer/actions/workflows/builds.yml)
+[![Builds](https://github.com/alan-j316/colloid/actions/workflows/builds.yml/badge.svg)](https://github.com/alan-j316/colloid/actions/workflows/builds.yml)
 
 # Colloid
-Software rasterizer.
+
+Software rasterizer (In active development).
+
+### Screenshot
+
+![Current Software Rasterizer State](docs/screenshots/Screenshot.png)
 
 # Prerequisites
 
@@ -23,7 +28,6 @@ Ensure the following tools are installed and available in your system PATH:
 - **ENABLE_STRICT**: Enables application level strict mode by enforcing "treating all warnings as errors". **ON** by
   default
   in both CI/CD and CMakePresets.
-- **ENABLE_TEST**: Enables *test application*. **ON** by default in both CI/CD and CMakePresets.
 
 ## Getting Started
 
