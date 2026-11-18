@@ -20,6 +20,7 @@ target_sources(
         colloid/Mesh.h
         colloid/Application.h
         colloid/Primitives.h
+        colloid/Camera.h
 )
 
 target_include_directories(
