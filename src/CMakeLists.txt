@@ -19,6 +19,7 @@ target_sources(
         colloid/parsers/ObjectParser.h
         colloid/Mesh.h
         colloid/Application.h
+        colloid/Primitives.h
 )
 
 target_include_directories(

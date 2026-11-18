@@ -266,7 +266,7 @@ namespace rasterizer
                 // auto w22    = edgeCross(projV0, projV2, point);
                 // Edge cross && Depth buffer-based culling
                 // std::cout << "Rendering: Excluded<" << currentPixelDepth << ">\n";
-                if (w0 >= 0.0 && w1 >= 0.0 && w2 >= 0.0 && currentPixelDepth >= depthBuffer[offset])
+                if ((std::bit_cast<int32_t>(w0) | std::bit_cast<int32_t>(w1) | std::bit_cast<int32_t>(w2)) >= 0 && currentPixelDepth >= depthBuffer[offset])
                 // if (eC0 && eC1 && eC2 && currentPixelDepth > depthBuffer[offset])
                 {
                     // Color Rendering
@@ -409,18 +409,20 @@ namespace rasterizer
         };
     }
 
-static float rot = 0.0f;
+    static float rot = 0.0f;
     void Renderer::render(const Mesh& mesh, const float deg) noexcept
     {
         std::vector<flcn::Vec3<float>> vertices(mesh.vertices.begin(), mesh.vertices.end());
 
-        auto view       = flcn::Mat4F::identity();
-        view(2, 3)      = -4;
-        const auto proj = makePersp(1280.0f / 720.0f, 1.4, 0.1f, 1000.0f);
+        auto view  = flcn::Mat4F::identity();
+        view(2, 3) = -3;
+        // NOTE: The near and far planes are switched to ensure higher precision for the depth testing as
+        //       with opposite order almost all the values are clumped near the 0.97 range(For Utah Teapot).
+        const auto proj = makePersp(static_cast<float>(width) / static_cast<float>(height), 1.22, 0.1f, 1000.0f);
         // const auto proj = makeOrtho(-1, 1, -1, 1, -1, 1);
-auto model = flcn::Mat4F::makeRotationY(rot);
+        auto model = flcn::Mat4F::makeRotationY(rot);
         rot += 0.01f;
-        model(1, 3) = -1;
+        model(1, 3) = 0;
         for (auto& vert : vertices)
         {
             // std::cout << vert;
