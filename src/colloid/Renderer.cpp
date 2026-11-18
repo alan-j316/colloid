@@ -266,7 +266,7 @@ namespace rasterizer
                 // auto w22    = edgeCross(projV0, projV2, point);
                 // Edge cross && Depth buffer-based culling
                 // std::cout << "Rendering: Excluded<" << currentPixelDepth << ">\n";
-                if (w0 >= 0.0 && w1 >= 0.0 && w2 >= 0.0 && currentPixelDepth > depthBuffer[offset])
+                if (w0 >= 0.0 && w1 >= 0.0 && w2 >= 0.0 && currentPixelDepth >= depthBuffer[offset])
                 // if (eC0 && eC1 && eC2 && currentPixelDepth > depthBuffer[offset])
                 {
                     // Color Rendering
@@ -277,8 +277,8 @@ namespace rasterizer
                     depthBuffer[offset] = currentPixelDepth;
 
                     // Depth buffer rendering
-                    const auto depthColor = static_cast<uint8_t>(depthBuffer[offset] * 50);
-                    putPixel(colorOffset, depthColor, depthColor, depthColor);
+                    // const auto depthColor = static_cast<uint8_t>(depthBuffer[offset] * 50);
+                    // putPixel(colorOffset, depthColor, depthColor, depthColor);
                 }
 
                 w0 += a01;
@@ -416,16 +416,16 @@ static float rot = 0.0f;
 
         auto view       = flcn::Mat4F::identity();
         view(2, 3)      = -4;
-        const auto proj = makePersp(1280.0f / 720.0f, 1.4, 100.0f, 0.1f);
+        const auto proj = makePersp(1280.0f / 720.0f, 1.4, 0.1f, 1000.0f);
         // const auto proj = makeOrtho(-1, 1, -1, 1, -1, 1);
 auto model = flcn::Mat4F::makeRotationY(rot);
         rot += 0.01f;
         model(1, 3) = -1;
         for (auto& vert : vertices)
         {
-            std::cout << vert;
+            // std::cout << vert;
             vert = perVertex(vert, { .model = model, .view = view, .projection = proj });
-            std::cout << vert << '\n';
+            // std::cout << vert << '\n';
         }
 
 
