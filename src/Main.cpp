@@ -13,6 +13,6 @@
 
 int main()
 {
-    rasterizer::Application application("Software Rasterizer", "1.0.0", "com.fgm.rasterizer");
+    colloid::Application application("Colloid", "1.0.0", "com.colloid.rasterizer");
     application.run();
 }

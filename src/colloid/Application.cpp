@@ -11,21 +11,24 @@
 
 #include "colloid/Application.h"
 
-#include "ImGui.h"
+#include "Gui.h" // TODO: Rename to an apt name
 
+#include <imgui.h>
+#include <SDL3/SDL.h>
 #include <SDL3/SDL_gpu.h>
 #include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_sdlgpu3.h>
 #include <filesystem>
-#include <imgui.h>
 
-namespace rasterizer
+namespace colloid
 {
-    Application::Application(const std::string_view appName, const std::string_view version,
-                             const std::string_view identifier)
-        : _renderer(_width, _height, _colorChannels)
+    Application::Application(std::string appName, std::string version, std::string identifier)
+        : _title(std::move(appName)),
+          _version(std::move(version)),
+          _identifier(std::move(identifier)),
+          _renderer(_width, _height, _colorChannels)
     {
-        SDL_SetAppMetadata(appName.data(), version.data(), identifier.data());
+        SDL_SetAppMetadata(_title.c_str(), _version.c_str(), _identifier.c_str());
 
         if (!SDL_Init(SDL_INIT_VIDEO))
         {
@@ -34,7 +37,7 @@ namespace rasterizer
         }
 
         // TODO: Make window resizeable
-        _window = SDL_CreateWindow(appName.data(), _width, _height, 0);
+        _window = SDL_CreateWindow(_title.c_str(), _width, _height, 0);
 
 
         /// +---------------------------------------------------------------------------------------+
@@ -60,42 +63,7 @@ namespace rasterizer
         /// +---------------------------------------------------------------------------------------+
         /// |                                   IMGUI                                               |
         /// +---------------------------------------------------------------------------------------+
-        // Setup Dear ImGui context
-        IMGUI_CHECKVERSION();
-        ImGui::CreateContext();
-        ImGuiIO& io = ImGui::GetIO();
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
-        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // IF using Docking Branch
-        io.ConfigDpiScaleFonts = true;
-
-        // Customization
-        float mainScale   = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
-        ImGuiStyle& style = ImGui::GetStyle();
-        ImGui::StyleColorsDark();
-        // ImGui::StyleColorsLight();
-        // style.FontSizeBase = 16.0f;           // Default to 13.0f when unspecified, which allows crisp legacy font
-        // for non-4K screens.
-        style.FrameRounding = 3.0f;
-        style.GrabRounding  = 3.0f;
-
-        // Setup scaling
-        style.ScaleAllSizes(mainScale); // Bake a fixed style scale. (until we have a solution for dynamic style
-                                        // scaling, changing this requires resetting Style + calling this again)
-        style.FontScaleDpi =
-            mainScale; // Set initial font scale. (in docking branch: using io.ConfigDpiScaleFonts=true automatically
-                       // overrides this for every window depending on the current monitor)
-
-
-        // Setup Platform/Renderer backends
-        ImGui_ImplSDL3_InitForSDLGPU(_window);
-        ImGui_ImplSDLGPU3_InitInfo imguiInitInfo = {};
-        imguiInitInfo.Device                     = _device;
-        imguiInitInfo.ColorTargetFormat          = SDL_GetGPUSwapchainTextureFormat(_device, _window);
-        imguiInitInfo.MSAASamples                = SDL_GPU_SAMPLECOUNT_1;      // Only used in multi-viewports mode.
-        imguiInitInfo.SwapchainComposition = SDL_GPU_SWAPCHAINCOMPOSITION_SDR; // Only used in multi-viewports mode.
-        imguiInitInfo.PresentMode          = SDL_GPU_PRESENTMODE_VSYNC;
-        ImGui_ImplSDLGPU3_Init(&imguiInitInfo);
+        colloid::imgui::init(_device, _window);
 
         initRenderTexture();
     }
@@ -201,44 +169,21 @@ namespace rasterizer
     void Application::renderWidgets() noexcept
     {
         bool showDemoWindow = false;
-
-        auto& io = ImGui::GetIO();
-
-        // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its
-        // code to learn more about Dear ImGui!).
         if (showDemoWindow)
         {
             ImGui::ShowDemoWindow(&showDemoWindow);
         }
 
-        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
-        {
-            static float f     = 0.0f;
-            static int counter = 0;
-
-            ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
-
-            ImGui::Text("This is some useful text.");        // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &showDemoWindow); // Edit bools storing our window open/close state
-
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f); // Edit 1 float using a slider from 0.0f to 1.0f
-
-            if (ImGui::Button(
-                    "Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
-            {
-                counter++;
-            }
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
-
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-            ImGui::End();
-        }
+        const auto& io = ImGui::GetIO();
+        ImGui::Begin("Rendering Timings");
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+        ImGui::End();
     }
 
 
     void Application::run() noexcept
     {
+        // TODO: Move from run
         // auto modelPath = std::filesystem::path("models") / "utah_teapot.obj";
         auto modelPath = std::filesystem::path("models") / "suzanne.obj";
         // auto modelPath = std::filesystem::path("models") / "Cube.obj";
@@ -247,31 +192,20 @@ namespace rasterizer
 
         _isRunning = true;
 
-
-        SDL_Surface* renderingSurface = SDL_GetWindowSurface(_window);
-
-        _renderer.clearScreen();
-        _renderer.render(mesh, 0.0f);
-
         float rotationAngle = 0.0f;
         while (_isRunning)
         {
+            _renderer.clearScreen();
+            _renderer.render(mesh, rotationAngle);
             blitTexture();
 
             colloid::imgui::beginFrame();
             renderRasterizedOutput();
             renderWidgets();
             colloid::imgui::endFrame(_device, _window);
-            //
-            // SDL_BlitSurface(imageSurface, nullptr, renderingSurface, nullptr);
-            // SDL_UpdateWindowSurface(_window);
             pollEvent();
 
-            rotationAngle += 0.1f;
-
-            /// +---------------------------------------------------------------------------------------+
-            /// |                                 DEAR IMGUI                                            |
-            /// +---------------------------------------------------------------------------------------+
+            rotationAngle += 0.01f;
         }
 
 
@@ -285,4 +219,4 @@ namespace rasterizer
         SDL_DestroyWindow(_window);
         SDL_Quit();
     }
-} // namespace rasterizer
+} // namespace colloid

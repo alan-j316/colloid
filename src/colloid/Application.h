@@ -10,19 +10,22 @@
  */
 
 
-#include "Mesh.h"
-#include "parsers/ObjectParser.h"
 #include "colloid/Renderer.h"
+#include "parsers/ObjectParser.h"
 
-#include <SDL3/SDL.h>
-#include <imgui.h>
+/// Forward declarations
+/// NOLINTBEGIN
+class SDL_Window;
+class SDL_GPUDevice;
+class SDL_GPUTexture;
+/// NOLINTEND
 
-namespace rasterizer
+namespace colloid
 {
     class Application
     {
     public:
-        Application(std::string_view appName, std::string_view version, std::string_view identifier);
+        Application(std::string appName, std::string version, std::string identifier);
         void run() noexcept;
 
     private:
@@ -38,9 +41,10 @@ namespace rasterizer
         SDL_Window* _window{ nullptr };
         SDL_GPUDevice* _device;
         SDL_GPUTexture* _renderTexture; /// < Texture for rendering the rasterized output to.
+        std::string _title, _version, _identifier;
         bool _isRunning{ false };
         int _width{ 1280 }, _height{ 720 }, _colorChannels{ 4 };
         Renderer _renderer;
     };
 
-} // namespace rasterizer
+} // namespace colloid

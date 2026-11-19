@@ -16,7 +16,7 @@
 #include <cstdint>
 #include <falcon/Falcon.h>
 
-namespace rasterizer
+namespace colloid
 {
     inline constexpr auto EPSILON = 1e-6;
 
@@ -289,4 +289,4 @@ namespace rasterizer
     };
 
 
-} // namespace rasterizer
+} // namespace colloid

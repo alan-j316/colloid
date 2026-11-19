@@ -21,7 +21,7 @@ target_sources(
         colloid/Application.h
         colloid/Primitives.h
         colloid/Camera.h
-        colloid/ImGui.h
+        colloid/Gui.h
 )
 
 target_include_directories(

@@ -14,7 +14,7 @@
 #include <vector>
 
 
-namespace rasterizer
+namespace colloid
 {
     class Mesh
     {

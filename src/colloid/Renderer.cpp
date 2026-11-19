@@ -15,7 +15,7 @@
 
 #include <algorithm>
 
-namespace rasterizer
+namespace colloid
 {
     template <typename T>
     void Renderer::renderTriangleWireframe(const flcn::CVec2<T>& v0, const flcn::CVec2<T>& v1, const flcn::CVec2<T>& v2)
@@ -286,7 +286,6 @@ namespace rasterizer
         };
     }
 
-    static float rot = 0.0f;
     void Renderer::render(const Mesh& mesh, const float deg) noexcept
     {
         std::vector<flcn::Vec3<float>> vertices(mesh.vertices.begin(), mesh.vertices.end());
@@ -297,8 +296,7 @@ namespace rasterizer
         //       with opposite order almost all the values are clumped near the 0.97 range(For Utah Teapot).
         const auto proj = makePersp(static_cast<float>(width) / static_cast<float>(height), 1.22, 0.1f, 1000.0f);
         // const auto proj = makeOrtho(-1, 1, -1, 1, -1, 1);
-        auto model = flcn::Mat4F::makeRotationY(rot);
-        rot += 0.01f;
+        auto model = flcn::Mat4F::makeRotationY(deg);
         model(1, 3) = 0;
         for (auto& vert : vertices)
         {
@@ -324,4 +322,4 @@ namespace rasterizer
             // renderTriangleWireframe(v0, v1, v2);
         }
     }
-} // namespace rasterizer
+} // namespace colloid

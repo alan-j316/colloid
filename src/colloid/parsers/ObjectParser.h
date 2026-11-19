@@ -23,7 +23,7 @@
 #include <string_view>
 
 
-namespace rasterizer
+namespace colloid
 {
     class ObjectParser
     {
@@ -125,4 +125,4 @@ namespace rasterizer
         }
     };
 
-} // namespace rasterizer
+} // namespace colloid
