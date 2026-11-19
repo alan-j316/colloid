@@ -174,9 +174,33 @@ namespace rasterizer
     }
 
 
-    void Application::renderImgui() noexcept
+    void Application::renderRasterizedOutput() const noexcept
     {
-        bool showDemoWindow = true;
+        const ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+        ImGui::SetNextWindowSize(viewport->WorkSize);
+        ImGui::SetNextWindowViewport(viewport->ID);
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+
+        // NOLINTBEGIN
+        constexpr ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
+            ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize |
+            ImGuiWindowFlags_NoBackground;
+        // NOLINTEND
+
+        ImGui::Begin("Rasterization Output", nullptr, windowFlags);
+        ImGui::Image(static_cast<ImTextureID>(reinterpret_cast<intptr_t>(_renderTexture)),
+                     ImVec2(static_cast<float>(_width), static_cast<float>(_height)));
+        ImGui::PopStyleVar(2);
+        ImGui::End();
+    }
+
+
+    void Application::renderWidgets() noexcept
+    {
+        bool showDemoWindow = false;
 
         auto& io = ImGui::GetIO();
 
@@ -233,14 +257,10 @@ namespace rasterizer
         while (_isRunning)
         {
             blitTexture();
+
             colloid::imgui::beginFrame();
-            renderImgui();
-            {
-                ImGui::Begin("Texture");
-                ImGui::Image(static_cast<ImTextureID>(reinterpret_cast<intptr_t>(_renderTexture)),
-                             ImVec2(static_cast<float>(_width), static_cast<float>(_height)));
-                ImGui::End();
-            }
+            renderRasterizedOutput();
+            renderWidgets();
             colloid::imgui::endFrame(_device, _window);
             //
             // SDL_BlitSurface(imageSurface, nullptr, renderingSurface, nullptr);

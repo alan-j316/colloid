@@ -31,7 +31,8 @@ namespace rasterizer
         void pollEvent() noexcept;
         /// Copies the frame buffer to the render texture.
         void blitTexture() const noexcept;
-        void renderImgui() noexcept;
+        void renderRasterizedOutput() const noexcept;
+        void renderWidgets() noexcept;
 
     private:
         SDL_Window* _window{ nullptr };
