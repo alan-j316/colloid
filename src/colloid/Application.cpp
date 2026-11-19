@@ -96,6 +96,24 @@ namespace rasterizer
         imguiInitInfo.SwapchainComposition = SDL_GPU_SWAPCHAINCOMPOSITION_SDR; // Only used in multi-viewports mode.
         imguiInitInfo.PresentMode          = SDL_GPU_PRESENTMODE_VSYNC;
         ImGui_ImplSDLGPU3_Init(&imguiInitInfo);
+
+        initRenderTexture();
+    }
+
+
+    void Application::initRenderTexture() noexcept
+    {
+        SDL_GPUTextureCreateInfo textureInfo = {};
+        textureInfo.type                     = SDL_GPU_TEXTURETYPE_2D;
+        textureInfo.format                   = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
+        textureInfo.usage                    = SDL_GPU_TEXTUREUSAGE_SAMPLER;
+        textureInfo.width                    = _width;
+        textureInfo.height                   = _height;
+        textureInfo.layer_count_or_depth     = 1;
+        textureInfo.num_levels               = 1;
+        textureInfo.sample_count             = SDL_GPU_SAMPLECOUNT_1;
+
+        _renderTexture = SDL_CreateGPUTexture(_device, &textureInfo);
     }
 
 
@@ -119,103 +137,41 @@ namespace rasterizer
         }
     }
 
-    //
-    // void Application::renderImgui() noexcept
-    // {
-    //
-    //     const ImGuiIO& io = ImGui::GetIO();
-    //     // Start the Dear ImGui frame
-    //     ImGui_ImplSDLGPU3_NewFrame();
-    //     ImGui_ImplSDL3_NewFrame();
-    //     ImGui::NewFrame();
-    //     bool showDemoWindow    = true;
-    //     bool showAnotherWindow = true;
-    //     ImVec4 clearColor{ 0, 0, 0, 0 };
-    //
-    //     // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its
-    //     // code to learn more about Dear ImGui!).
-    //     if (showDemoWindow)
-    //     {
-    //         ImGui::ShowDemoWindow(&showDemoWindow);
-    //     }
-    //
-    //     // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
-    //     {
-    //         static float f     = 0.0f;
-    //         static int counter = 0;
-    //
-    //         ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
-    //
-    //         ImGui::Text("This is some useful text.");        // Display some text (you can use a format strings too)
-    //         ImGui::Checkbox("Demo Window", &showDemoWindow); // Edit bools storing our window open/close state
-    //         ImGui::Checkbox("Another Window", &showAnotherWindow);
-    //
-    //         ImGui::SliderFloat("float", &f, 0.0f, 1.0f); // Edit 1 float using a slider from 0.0f to 1.0f
-    //         ImGui::ColorEdit3("clear color", (float*) &showAnotherWindow); // Edit 3 floats representing a color
-    //
-    //         if (ImGui::Button(
-    //                 "Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
-    //         {
-    //             counter++;
-    //         }
-    //         ImGui::SameLine();
-    //         ImGui::Text("counter = %d", counter);
-    //
-    //         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-    //         ImGui::End();
-    //     }
-    //
-    //
-    //
-    //     // 3. Show another simple window.
-    //     if (showAnotherWindow)
-    //     {
-    //         ImGui::Begin("Another Window",
-    //                      &showAnotherWindow); // Pass a pointer to our bool variable (the window will have a closing
-    //                                           // button that will clear the bool when clicked)
-    //         ImGui::Text("Hello from another window!");
-    //         if (ImGui::Button("Close Me"))
-    //         {
-    //             showAnotherWindow = false;
-    //         }
-    //         ImGui::End();
-    //     }
-    //
-    //     // Rendering
-    //     ImGui::Render();
-    //     ImDrawData* draw_data   = ImGui::GetDrawData();
-    //     const bool is_minimized = (draw_data->DisplaySize.x <= 0.0f || draw_data->DisplaySize.y <= 0.0f);
-    //
-    //     SDL_GPUCommandBuffer* command_buffer = SDL_AcquireGPUCommandBuffer(_device); // Acquire a GPU command buffer
-    //
-    //     SDL_GPUTexture* swapchain_texture;
-    //     SDL_WaitAndAcquireGPUSwapchainTexture(command_buffer, _window, &swapchain_texture, nullptr,
-    //                                           nullptr); // Acquire a swapchain texture
-    //
-    //     if (swapchain_texture != nullptr && !is_minimized)
-    //     {
-    //         // This is mandatory: call ImGui_ImplSDLGPU3_PrepareDrawData() to upload the vertex/index buffer!
-    //         ImGui_ImplSDLGPU3_PrepareDrawData(draw_data, command_buffer);
-    //
-    //         // Setup and start a render pass
-    //         SDL_GPUColorTargetInfo target_info = {};
-    //         target_info.texture                = swapchain_texture;
-    //         target_info.clear_color            = SDL_FColor{ clearColor.x, clearColor.y, clearColor.z, clearColor.w
-    //         }; target_info.load_op                = SDL_GPU_LOADOP_CLEAR; target_info.store_op               =
-    //         SDL_GPU_STOREOP_STORE; target_info.mip_level              = 0; target_info.layer_or_depth_plane   = 0;
-    //         target_info.cycle                  = false;
-    //         SDL_GPURenderPass* render_pass     = SDL_BeginGPURenderPass(command_buffer, &target_info, 1, nullptr);
-    //
-    //         // Render ImGui
-    //         ImGui_ImplSDLGPU3_RenderDrawData(draw_data, command_buffer, render_pass);
-    //
-    //         SDL_EndGPURenderPass(render_pass);
-    //     }
-    //
-    //     // Submit the command buffer
-    //     SDL_SubmitGPUCommandBuffer(command_buffer);
-    // }
 
+    void Application::blitTexture() const noexcept
+    {
+        // Create staging buffer
+        // FIXME: A real engine would likely keep one around, see what the SDL_GPU backend is doing.
+        SDL_GPUTransferBufferCreateInfo stagingBufferInfo = {};
+        stagingBufferInfo.usage                           = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
+        stagingBufferInfo.size                            = _width * _height * 4;
+        SDL_GPUTransferBuffer* stagingBuffer              = SDL_CreateGPUTransferBuffer(_device, &stagingBufferInfo);
+        assert(stagingBuffer != nullptr);
+
+        // Copy the frame buffer to the staging buffer
+        void* pTexture = SDL_MapGPUTransferBuffer(_device, stagingBuffer, true);
+        memcpy(pTexture, _renderer.frameBuffer, static_cast<size_t>(_width * _height * 4));
+        SDL_UnmapGPUTransferBuffer(_device, stagingBuffer);
+
+        // Submit the staging buffer with a copy/transfer pass.
+        const SDL_GPUTextureTransferInfo transferInfo{ .transfer_buffer = stagingBuffer, .offset = 0 };
+
+        SDL_GPUTextureRegion textureRegion = { .texture = _renderTexture,
+                                               .x       = 0,
+                                               .y       = 0,
+                                               .w       = static_cast<uint32_t>(_width),
+                                               .h       = static_cast<uint32_t>(_height),
+                                               .d       = 1 };
+
+        // Upload
+        SDL_GPUCommandBuffer* cmd = SDL_AcquireGPUCommandBuffer(_device);
+        SDL_GPUCopyPass* copyPass = SDL_BeginGPUCopyPass(cmd);
+        SDL_UploadToGPUTexture(copyPass, &transferInfo, &textureRegion, false);
+        SDL_EndGPUCopyPass(copyPass);
+        SDL_SubmitGPUCommandBuffer(cmd);
+        // TODO: TODO REMOVE THIS AND MAKE THE STAGING BUFFER PERMANENT
+        SDL_ReleaseGPUTransferBuffer(_device, stagingBuffer);
+    }
 
 
     void Application::renderImgui() noexcept
@@ -257,7 +213,6 @@ namespace rasterizer
     }
 
 
-
     void Application::run() noexcept
     {
         // auto modelPath = std::filesystem::path("models") / "utah_teapot.obj";
@@ -277,71 +232,13 @@ namespace rasterizer
         float rotationAngle = 0.0f;
         while (_isRunning)
         {
-            // TODO: Add run loop
-            // _renderer.clearScreen();
-            // _renderer.render(mesh, rotationAngle);
-
-            // SDL_Surface* imageSurface =
-            //     SDL_CreateSurfaceFrom(_width, _height, renderingSurface->format, _renderer.frameBuffer,
-            //                           _renderer.width * _renderer.colorChannels);
-            SDL_Surface* imageSurface =
-                SDL_CreateSurfaceFrom(_width, _height, SDL_PIXELFORMAT_RGBA32, _renderer.frameBuffer,
-                                      _renderer.width * _renderer.colorChannels);
-            // Create texture
-            SDL_GPUTextureCreateInfo texture_info = {};
-            texture_info.type                     = SDL_GPU_TEXTURETYPE_2D;
-            texture_info.format                   = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
-            texture_info.usage                    = SDL_GPU_TEXTUREUSAGE_SAMPLER;
-            texture_info.width                    = _width;
-            texture_info.height                   = _height;
-            texture_info.layer_count_or_depth     = 1;
-            texture_info.num_levels               = 1;
-            texture_info.sample_count             = SDL_GPU_SAMPLECOUNT_1;
-
-            SDL_GPUTexture* texture = SDL_CreateGPUTexture(_device, &texture_info);
-
-            // Create transfer buffer
-            // FIXME: A real engine would likely keep one around, see what the SDL_GPU backend is doing.
-            SDL_GPUTransferBufferCreateInfo transferbuffer_info = {};
-            transferbuffer_info.usage                           = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
-            transferbuffer_info.size                            = _width * _height * 4;
-            SDL_GPUTransferBuffer* transferbuffer = SDL_CreateGPUTransferBuffer(_device, &transferbuffer_info);
-            IM_ASSERT(transferbuffer != NULL);
-
-            // Copy to transfer buffer
-            void* texture_ptr = SDL_MapGPUTransferBuffer(_device, transferbuffer, true);
-            memcpy(texture_ptr, _renderer.frameBuffer, _width * _height * 4);
-            SDL_UnmapGPUTransferBuffer(_device, transferbuffer);
-
-            SDL_GPUTextureTransferInfo transfer_info = {};
-            transfer_info.offset                     = 0;
-            transfer_info.transfer_buffer            = transferbuffer;
-
-            SDL_GPUTextureRegion texture_region = {};
-            texture_region.texture              = texture;
-            texture_region.x                    = (Uint32) 0;
-            texture_region.y                    = (Uint32) 0;
-            texture_region.w                    = (Uint32) _width;
-            texture_region.h                    = (Uint32) _height;
-            texture_region.d                    = 1;
-
-            // Upload
-            SDL_GPUCommandBuffer* cmd  = SDL_AcquireGPUCommandBuffer(_device);
-            SDL_GPUCopyPass* copy_pass = SDL_BeginGPUCopyPass(cmd);
-            SDL_UploadToGPUTexture(copy_pass, &transfer_info, &texture_region, false);
-            SDL_EndGPUCopyPass(copy_pass);
-            SDL_SubmitGPUCommandBuffer(cmd);
-
-            SDL_ReleaseGPUTransferBuffer(_device, transferbuffer);
-            // SDL_Texture* texture = SDL_CreateTextureFromSurface(_renderer, imageSurface);
+            blitTexture();
             colloid::imgui::beginFrame();
             renderImgui();
             {
                 ImGui::Begin("Texture");
-                ImGui::Text("pointer = %x", imageSurface);
-                ImGui::Text("size = %d x %d", _width, _height);
-                ImGui::Image(static_cast<ImTextureID>(reinterpret_cast<intptr_t>(texture)),
-                             ImVec2(_width, _height));
+                ImGui::Image(static_cast<ImTextureID>(reinterpret_cast<intptr_t>(_renderTexture)),
+                             ImVec2(static_cast<float>(_width), static_cast<float>(_height)));
                 ImGui::End();
             }
             colloid::imgui::endFrame(_device, _window);

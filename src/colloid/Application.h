@@ -26,12 +26,17 @@ namespace rasterizer
         void run() noexcept;
 
     private:
+        /// Initializes the texture required for rendering.
+        void initRenderTexture() noexcept;
         void pollEvent() noexcept;
+        /// Copies the frame buffer to the render texture.
+        void blitTexture() const noexcept;
         void renderImgui() noexcept;
 
     private:
         SDL_Window* _window{ nullptr };
         SDL_GPUDevice* _device;
+        SDL_GPUTexture* _renderTexture; /// < Texture for rendering the rasterized output to.
         bool _isRunning{ false };
         int _width{ 1280 }, _height{ 720 }, _colorChannels{ 4 };
         Renderer _renderer;
