@@ -15,9 +15,9 @@
 
 /// Forward declarations
 /// NOLINTBEGIN
-class SDL_Window;
-class SDL_GPUDevice;
-class SDL_GPUTexture;
+struct SDL_Window;
+struct SDL_GPUDevice;
+struct SDL_GPUTexture;
 /// NOLINTEND
 
 namespace colloid
