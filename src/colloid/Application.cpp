@@ -13,12 +13,12 @@
 
 #include "Gui.h" // TODO: Rename to an apt name
 
-#include <imgui.h>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_gpu.h>
 #include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_sdlgpu3.h>
 #include <filesystem>
+#include <imgui.h>
 
 namespace colloid
 {
@@ -132,11 +132,11 @@ namespace colloid
                                                .d       = 1 };
 
         // Upload
-        SDL_GPUCommandBuffer* cmd = SDL_AcquireGPUCommandBuffer(_device);
-        SDL_GPUCopyPass* copyPass = SDL_BeginGPUCopyPass(cmd);
-        SDL_UploadToGPUTexture(copyPass, &transferInfo, &textureRegion, false);
-        SDL_EndGPUCopyPass(copyPass);
-        SDL_SubmitGPUCommandBuffer(cmd);
+        SDL_GPUCommandBuffer* pCmdBuffer = SDL_AcquireGPUCommandBuffer(_device);
+        SDL_GPUCopyPass* pCopyPass       = SDL_BeginGPUCopyPass(pCmdBuffer);
+        SDL_UploadToGPUTexture(pCopyPass, &transferInfo, &textureRegion, false);
+        SDL_EndGPUCopyPass(pCopyPass);
+        SDL_SubmitGPUCommandBuffer(pCmdBuffer);
         // TODO: TODO REMOVE THIS AND MAKE THE STAGING BUFFER PERMANENT
         SDL_ReleaseGPUTransferBuffer(_device, stagingBuffer);
     }
@@ -144,10 +144,10 @@ namespace colloid
 
     void Application::renderRasterizedOutput() const noexcept
     {
-        const ImGuiViewport* viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(viewport->WorkPos);
-        ImGui::SetNextWindowSize(viewport->WorkSize);
-        ImGui::SetNextWindowViewport(viewport->ID);
+        const ImGuiViewport* pViewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(pViewport->WorkPos);
+        ImGui::SetNextWindowSize(pViewport->WorkSize);
+        ImGui::SetNextWindowViewport(pViewport->ID);
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
@@ -184,8 +184,8 @@ namespace colloid
     void Application::run() noexcept
     {
         // TODO: Move from run
-        // auto modelPath = std::filesystem::path("models") / "utah_teapot.obj";
-        auto modelPath = std::filesystem::path("models") / "suzanne.obj";
+        auto modelPath = std::filesystem::path("models") / "utah_teapot.obj";
+        // auto modelPath = std::filesystem::path("models") / "suzanne.obj";
         // auto modelPath = std::filesystem::path("models") / "Cube.obj";
         ObjectParser parser;
         auto mesh = parser.parse(modelPath.string());

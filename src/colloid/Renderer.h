@@ -237,7 +237,10 @@ namespace colloid
             auto vec = args.projection * args.view * args.model * flcn::Vec4(vertex, 1.0f);
             // Perspective Divide
             const auto w = vec.w();
-            vec /= w;
+            if (flcn::abs(w) >= flcn::Config::EPSILON<float>)
+            {
+                vec /= w;
+            }
             vec.w() = w;
 
             // To screen space/viewport space
@@ -278,12 +281,8 @@ namespace colloid
         {
             const float s1 = 1 / (std::tan(fov * 0.5f) * aspect);
             const float s2 = 1 / std::tan(fov * 0.5f);
-            return flcn::Mat4F{
-                s1, 0, 0,  0,
-                0, -s2, 0, 0,
-                0, 0, -far / (far - near), -(far * near) / (far - near),
-                0,  0, -1, 0
-            };
+            return flcn::Mat4F{ s1, 0, 0,  0, 0, -s2, 0, 0, 0, 0, -far / (far - near), -(far * near) / (far - near),
+                                0,  0, -1, 0 };
         }
         // TODO: REPLACE WITH FLCN END
     };
