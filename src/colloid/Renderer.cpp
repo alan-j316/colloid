@@ -46,8 +46,11 @@ namespace colloid
         };
     }
 
-    void Renderer::renderTriangle(const flcn::Vec3F& v0, const flcn::Vec3F& v1, const flcn::Vec3F& v2, const uint8_t r,
-                                  const uint8_t g, const uint8_t b, const uint8_t a) noexcept
+    /// Convert from FP 0 - 1 to 0 - 255 range.
+    static uint8_t cvtRGB(float clr) noexcept { return static_cast<uint8_t>(clr * 255.0f); }
+
+    void Renderer::renderTriangle(const flcn::Vec3F& v0, const flcn::Vec3F& v1, const flcn::Vec3F& v2,
+                                  const flcn::Vec4F& c0, const flcn::Vec4F& c1, const flcn::Vec4F& c2) noexcept
     {
         const auto projV0 = v0.template swizzle<flcn::axis::X, flcn::axis::Y>();
         const auto projV1 = v1.template swizzle<flcn::axis::X, flcn::axis::Y>();
@@ -144,8 +147,10 @@ namespace colloid
                 if ((std::bit_cast<int32_t>(w0) | std::bit_cast<int32_t>(w1) | std::bit_cast<int32_t>(w2)) >= 0 &&
                     currentPixelDepth >= depthBuffer[offset])
                 {
+
+                    const auto pixelColor = (w0 * c2 + w1 * c0 + w2 * c1) / (w0 + w1 + w2);
                     // Color Rendering
-                    putPixel(colorOffset, r, g, b, a);
+                    putPixel(colorOffset, cvtRGB(pixelColor.r()), cvtRGB(pixelColor.g()), cvtRGB(pixelColor.b()), 0xff);
                     // std::cout << "Rendering: Depth<" << currentPixelDepth << ">\n";
 
                     // Update depth buffer
@@ -314,7 +319,8 @@ namespace colloid
             const auto faceColor = mesh.color[idx];
             // renderTriangle(vertices[i0], vertices[i1], vertices[i2], static_cast<uint8_t>(faceColor.r() * 255),
             // static_cast<uint8_t>(faceColor.g() * 255), static_cast<uint8_t>(faceColor.b() * 255), 0xff);
-            renderTriangle(vertices[i0], vertices[i1], vertices[i2], 0xff, 0xff, 0xff, 0xff);
+            // renderTriangle(vertices[i0], vertices[i1], vertices[i2], 0xff, 0xff, 0xff, 0xff);
+            renderTriangle(vertices[i0], vertices[i1], vertices[i2], mesh.color[i0], mesh.color[i1], mesh.color[i2]);
             // renderTriangle(vertices[i0], vertices[i1], vertices[i2], 0xff, 0xff, 0xff, 0xff);
             // const auto v0 = vertices[i0].swizzle<flcn::axis::X, flcn::axis::Y>();
             // const auto v1 = vertices[i1].swizzle<flcn::axis::X, flcn::axis::Y>();

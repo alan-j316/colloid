@@ -171,8 +171,8 @@ namespace colloid
         //         (vec.y() + 1) * 0.5f * height,
         //     };
         // }
-        void renderTriangle(const flcn::Vec3F& v0, const flcn::Vec3F& v1, const flcn::Vec3F& v2, uint8_t r, uint8_t g,
-                            uint8_t b, uint8_t a) noexcept;
+        void renderTriangle(const flcn::Vec3F& v0, const flcn::Vec3F& v1, const flcn::Vec3F& v2, const flcn::Vec4F& c0,
+                            const flcn::Vec4F& c1, const flcn::Vec4F& c2) noexcept;
 
         /**
          * Compute approximate the bounding box of the triangle.

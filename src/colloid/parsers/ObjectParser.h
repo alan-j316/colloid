@@ -21,9 +21,9 @@
 #include <iostream>
 #include <ranges>
 #include <string>
-#include <unordered_map>
 #include <string_view>
 #include <tiny_obj_loader.h>
+#include <unordered_map>
 
 namespace colloid
 {
@@ -127,10 +127,15 @@ namespace colloid
         //     return mesh;
         // }
 
-
+        /**
+         * @brief Parse a `.obj` file into a @ref MeshObject.
+         * @param filename The name of the file to parse.
+         * @return A mesh object.
+         */
         inline MeshObject parse(const std::string& filename)
         {
             MeshObject mesh{};
+            std::cout << "Parsing Mesh: " << filename << "...\n";
             // TODO: A vertex deduplication
 
             tinyobj::ObjReaderConfig readerConfig;
@@ -200,6 +205,7 @@ namespace colloid
                     // shape.mesh.material_ids[f];
                 }
             }
+            std::cout << "Mesh Parsed: " << filename << '\n';
             return mesh;
         }
     };
