@@ -24,7 +24,7 @@ namespace colloid
     { float alpha, beta, gamma; };
 
     struct BoundingBox
-    { uint32_t top, left, right, bottom; };
+    { int32_t top, left, right, bottom; };
 
     struct FPBoundingBox
     { float top, left, right, bottom; };

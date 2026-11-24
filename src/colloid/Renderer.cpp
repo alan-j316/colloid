@@ -39,10 +39,10 @@ namespace colloid
     BoundingBox getBounds(const flcn::Vec3F& v0, const flcn::Vec3F& v1, const flcn::Vec3F& v2) noexcept
     {
         return BoundingBox{
-            .top    = static_cast<uint32_t>(std::min({ v0.y(), v1.y(), v2.y() })),
-            .left   = static_cast<uint32_t>(std::min({ v0.x(), v1.x(), v2.x() })),
-            .right  = static_cast<uint32_t>(std::max({ v0.x(), v1.x(), v2.x() })),
-            .bottom = static_cast<uint32_t>(std::max({ v0.y(), v1.y(), v2.y() })),
+            .top    = static_cast<int32_t>(std::min({ v0.y(), v1.y(), v2.y() })),
+            .left   = static_cast<int32_t>(std::min({ v0.x(), v1.x(), v2.x() })),
+            .right  = static_cast<int32_t>(std::max({ v0.x(), v1.x(), v2.x() })),
+            .bottom = static_cast<int32_t>(std::max({ v0.y(), v1.y(), v2.y() })),
         };
     }
 
@@ -52,7 +52,6 @@ namespace colloid
         const auto projV0 = v0.template swizzle<flcn::axis::X, flcn::axis::Y>();
         const auto projV1 = v1.template swizzle<flcn::axis::X, flcn::axis::Y>();
         const auto projV2 = v2.template swizzle<flcn::axis::X, flcn::axis::Y>();
-
 
         // Calculate the bounding box of the triangle
         // (minX, minY)--------
@@ -67,10 +66,10 @@ namespace colloid
         auto bb = getBounds(v0, v1, v2);
 
         // Clip against screen bounds
-        bb.left   = std::max(bb.left, 0u);
-        bb.top    = std::max(bb.top, 0u);
-        bb.right  = std::min(bb.right, static_cast<uint32_t>(width - 1));
-        bb.bottom = std::min(bb.bottom, static_cast<uint32_t>(height - 1));
+        bb.left   = std::max(bb.left, 0);
+        bb.top    = std::max(bb.top, 0);
+        bb.right  = std::min(bb.right, width - 1);
+        bb.bottom = std::min(bb.bottom, height - 1);
 
 
         // Cross between two edges, v0v1(v1 - v0) and v0v2(v2 - v0)
@@ -140,11 +139,10 @@ namespace colloid
                 // auto w02    = edgeCross(projV1, projV2, point);
                 // auto w12    = edgeCross(projV2, projV0, point);
                 // auto w22    = edgeCross(projV0, projV2, point);
+                //
                 // Edge cross && Depth buffer-based culling
-                // std::cout << "Rendering: Excluded<" << currentPixelDepth << ">\n";
                 if ((std::bit_cast<int32_t>(w0) | std::bit_cast<int32_t>(w1) | std::bit_cast<int32_t>(w2)) >= 0 &&
                     currentPixelDepth >= depthBuffer[offset])
-                // if (eC0 && eC1 && eC2 && currentPixelDepth > depthBuffer[offset])
                 {
                     // Color Rendering
                     putPixel(colorOffset, r, g, b, a);
@@ -198,7 +196,7 @@ namespace colloid
 
     void Renderer::clearScreen() const noexcept
     {
-        std::memset(frameBuffer, 123, static_cast<size_t>(width * height * colorChannels));
+        std::memset(frameBuffer, clearColor, static_cast<size_t>(width * height * colorChannels));
         // Clear the depth buffer
         std::memset(depthBuffer, 0, static_cast<size_t>(width * height * 4));
     }
@@ -279,10 +277,10 @@ namespace colloid
                                              const flcn::CVec2F& v2) noexcept
     {
         return BoundingBox{
-            .top    = static_cast<uint32_t>(std::min({ v0.y(), v1.y(), v2.y() })),
-            .left   = static_cast<uint32_t>(std::min({ v0.x(), v1.x(), v2.x() })),
-            .right  = static_cast<uint32_t>(std::max({ v0.x(), v1.x(), v2.x() })),
-            .bottom = static_cast<uint32_t>(std::max({ v0.y(), v1.y(), v2.y() })),
+            .top    = static_cast<int32_t>(std::min({ v0.y(), v1.y(), v2.y() })),
+            .left   = static_cast<int32_t>(std::min({ v0.x(), v1.x(), v2.x() })),
+            .right  = static_cast<int32_t>(std::max({ v0.x(), v1.x(), v2.x() })),
+            .bottom = static_cast<int32_t>(std::max({ v0.y(), v1.y(), v2.y() })),
         };
     }
 
@@ -291,18 +289,17 @@ namespace colloid
         std::vector vertices(mesh.vertices.begin(), mesh.vertices.end());
 
         auto view  = flcn::Mat4F::identity();
-        view(2, 3) = -3;
+        view(2, 3) = -4;
+        // view(1, 3) = -4;
         // NOTE: The near and far planes are switched to ensure higher precision for the depth testing as
         //       with opposite order almost all the values are clumped near the 0.97 range(For Utah Teapot).
         const auto proj = makePersp(static_cast<float>(width) / static_cast<float>(height), 1.22, 0.1f, 1000.0f);
         // const auto proj = makeOrtho(-1, 1, -1, 1, -1, 1);
-        auto model = flcn::Mat4F::makeRotationY(deg);
+        auto model  = flcn::Mat4F::makeRotationY(deg);
         model(1, 3) = 0;
         for (auto& vert : vertices)
         {
-            // std::cout << vert;
             vert = perVertex(vert, { .model = model, .view = view, .projection = proj });
-            // std::cout << vert << '\n';
         }
 
 
