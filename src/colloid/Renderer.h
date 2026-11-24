@@ -37,6 +37,7 @@ namespace colloid
         float* depthBuffer;
         int width, height, colorChannels;
         int clearColor = 0x000000;
+        flcn::Mat4F view{};
 
         /**
          * @brief Construct a renderer with the given size.
@@ -96,6 +97,10 @@ namespace colloid
         void clearScreen() const noexcept;
 
         ~Renderer() noexcept;
+
+
+        /// @brief Update the render's view matrix.
+        void updateView(const flcn::Mat4F& v) noexcept;
 
         /**
          * @brief Compute the edge cross of 2 vertices and a point.

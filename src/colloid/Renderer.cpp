@@ -49,6 +49,116 @@ namespace colloid
     /// Convert from FP 0 - 1 to 0 - 255 range.
     static uint8_t cvtRGB(float clr) noexcept { return static_cast<uint8_t>(clr * 255.0f); }
 
+    void Renderer::renderLine(const float ax, const float ay, const float bx, const float by, const uint8_t r,
+                              const uint8_t g, const uint8_t b, const uint8_t a) const noexcept
+    {
+        for (float t = 0.0f; t <= 1.0f; t += 0.002f)
+        {
+            const auto x            = static_cast<int>(std::round(ax + t * (bx - ax)));
+            const auto y            = static_cast<int>(std::round(ay + t * (by - ay)));
+            const auto bufferOffset = colorChannels * (width * y + x);
+            if constexpr (std::endian::native == std::endian::little)
+            {
+                frameBuffer[bufferOffset + 0] = b;
+                frameBuffer[bufferOffset + 1] = g;
+                frameBuffer[bufferOffset + 2] = r;
+                frameBuffer[bufferOffset + 3] = a;
+            }
+            else if constexpr (std::endian::native == std::endian::big)
+            {
+                frameBuffer[bufferOffset + 0] = r;
+                frameBuffer[bufferOffset + 1] = g;
+                frameBuffer[bufferOffset + 2] = b;
+                frameBuffer[bufferOffset + 3] = a;
+            }
+        }
+    }
+
+
+
+    void Renderer::clearScreen() const noexcept
+    {
+        std::memset(frameBuffer, clearColor, static_cast<size_t>(width * height * colorChannels));
+        // Clear the depth buffer
+        std::memset(depthBuffer, 0, static_cast<size_t>(width * height * 4));
+    }
+
+
+    Renderer::~Renderer() noexcept
+    {
+        delete[] frameBuffer;
+        delete[] depthBuffer;
+    }
+
+
+    void Renderer::updateView(const flcn::Mat4F& v) noexcept { this->view = v; }
+
+    BarycentricCoordinates Renderer::computeBaryCentricCoordinates(const flcn::Vec2F& v0, const flcn::Vec2F& v1,
+                                                                   const flcn::Vec2F& v2,
+                                                                   const flcn::Vec2F& point) const noexcept
+    {
+        // Division by two is omitted since that is common in smaller triangles area too
+        const auto triArea   = (v1 - v0).cross(v2 - v1);
+        const auto alphaArea = (v2 - v1).cross(point - v1);
+        const auto betaArea  = (v0 - v2).cross(point - v2);
+        const auto gammaArea = (v1 - v0).cross(point - v0);
+
+        return BarycentricCoordinates{ .alpha = alphaArea / triArea,
+                                       .beta  = betaArea / triArea,
+                                       .gamma = gammaArea / triArea };
+    }
+
+
+    BarycentricCoordinates Renderer::computeBaryCentricCoordinates(const flcn::CVec2F& v0, const flcn::CVec2F& v1,
+                                                                   const flcn::CVec2F& v2, const flcn::CVec2F& point,
+                                                                   const float triArea) noexcept
+    {
+        const auto alphaArea = 0.5f * (v2 - v1).cross(point - v1);
+        const auto betaArea  = 0.5f * (v0 - v2).cross(point - v2);
+        const auto gammaArea = 0.5f * (v1 - v0).cross(point - v0);
+
+        return BarycentricCoordinates{ .alpha = alphaArea / triArea,
+                                       .beta  = betaArea / triArea,
+                                       .gamma = gammaArea / triArea };
+    }
+
+
+    bool Renderer::isTopLeftEdge(const flcn::CVec2F& v0, const flcn::CVec2F& v1) noexcept
+    {
+        const auto edge = v1 - v0;
+        // Top Left if edge's x coordinate is positive (negative is bottom edge due to clockwise convention
+        // used) and if y coordinate is 0
+        const auto isTopEdge = edge.x() >= EPSILON && std::abs(edge.y()) < EPSILON;
+        // Left Edge if y coordinate is >=0
+        const auto isLeftEdge = edge.y() >= 1e-5;
+
+        return isTopEdge && isLeftEdge;
+    }
+
+
+    void Renderer::putPixel(const size_t bufferOffset, const uint8_t r, const uint8_t g, const uint8_t b,
+                            const uint8_t a) const noexcept
+    {
+
+        if constexpr (std::endian::native == std::endian::big)
+        {
+            // ARGB
+            frameBuffer[bufferOffset]     = r;
+            frameBuffer[bufferOffset + 1] = g;
+            frameBuffer[bufferOffset + 2] = b;
+            frameBuffer[bufferOffset + 3] = a;
+        }
+        else if constexpr (std::endian::native == std::endian::little)
+        {
+            // BGRA
+            frameBuffer[bufferOffset]     = b;
+            frameBuffer[bufferOffset + 1] = g;
+            frameBuffer[bufferOffset + 2] = r;
+            frameBuffer[bufferOffset + 3] = a;
+        }
+    }
+
+
     void Renderer::renderTriangle(const flcn::Vec3F& v0, const flcn::Vec3F& v1, const flcn::Vec3F& v2,
                                   const flcn::Vec4F& c0, const flcn::Vec4F& c1, const flcn::Vec4F& c2) noexcept
     {
@@ -118,6 +228,7 @@ namespace colloid
             auto w2 = w2Row;
             for (auto x = bb.left; x <= bb.right; ++x)
             {
+                auto inv               = 1.0f / (w0 + w1 + w2);
                 const auto offset      = y * static_cast<size_t>(width) + x;
                 const auto colorOffset = static_cast<size_t>(colorChannels) * offset;
 
@@ -126,7 +237,7 @@ namespace colloid
                     continue;
                 }
 
-                const auto currentPixelDepth = (w0 * v2.z() + w1 * v0.z() + w2 * v1.z()) / (w0 + w1 + w2);
+                const auto currentPixelDepth = (w0 * v2.z() + w1 * v0.z() + w2 * v1.z()) * inv;
 
 
                 // A comparison of anything other than 0.0f, like 1e-5 or 1e-10 will cause visual glitches
@@ -148,7 +259,7 @@ namespace colloid
                     currentPixelDepth >= depthBuffer[offset])
                 {
 
-                    const auto pixelColor = (w0 * c2 + w1 * c0 + w2 * c1) / (w0 + w1 + w2);
+                    const auto pixelColor = (w0 * c2 + w1 * c0 + w2 * c1) * inv;
                     // Color Rendering
                     putPixel(colorOffset, cvtRGB(pixelColor.r()), cvtRGB(pixelColor.g()), cvtRGB(pixelColor.b()), 0xff);
                     // std::cout << "Rendering: Depth<" << currentPixelDepth << ">\n";
@@ -172,114 +283,6 @@ namespace colloid
     }
 
 
-
-    void Renderer::renderLine(const float ax, const float ay, const float bx, const float by, const uint8_t r,
-                              const uint8_t g, const uint8_t b, const uint8_t a) const noexcept
-    {
-        for (float t = 0.0f; t <= 1.0f; t += 0.002f)
-        {
-            const auto x            = static_cast<int>(std::round(ax + t * (bx - ax)));
-            const auto y            = static_cast<int>(std::round(ay + t * (by - ay)));
-            const auto bufferOffset = colorChannels * (width * y + x);
-            if constexpr (std::endian::native == std::endian::little)
-            {
-                frameBuffer[bufferOffset + 0] = b;
-                frameBuffer[bufferOffset + 1] = g;
-                frameBuffer[bufferOffset + 2] = r;
-                frameBuffer[bufferOffset + 3] = a;
-            }
-            else if constexpr (std::endian::native == std::endian::big)
-            {
-                frameBuffer[bufferOffset + 0] = r;
-                frameBuffer[bufferOffset + 1] = g;
-                frameBuffer[bufferOffset + 2] = b;
-                frameBuffer[bufferOffset + 3] = a;
-            }
-        }
-    }
-
-
-    void Renderer::clearScreen() const noexcept
-    {
-        std::memset(frameBuffer, clearColor, static_cast<size_t>(width * height * colorChannels));
-        // Clear the depth buffer
-        std::memset(depthBuffer, 0, static_cast<size_t>(width * height * 4));
-    }
-
-
-    Renderer::~Renderer() noexcept
-    {
-        delete[] frameBuffer;
-        delete[] depthBuffer;
-    }
-
-
-    BarycentricCoordinates Renderer::computeBaryCentricCoordinates(const flcn::Vec2F& v0, const flcn::Vec2F& v1,
-                                                                   const flcn::Vec2F& v2,
-                                                                   const flcn::Vec2F& point) const noexcept
-    {
-        // Division by two is omitted since that is common in smaller triangles area too
-        const auto triArea   = (v1 - v0).cross(v2 - v1);
-        const auto alphaArea = (v2 - v1).cross(point - v1);
-        const auto betaArea  = (v0 - v2).cross(point - v2);
-        const auto gammaArea = (v1 - v0).cross(point - v0);
-
-        return BarycentricCoordinates{ .alpha = alphaArea / triArea,
-                                       .beta  = betaArea / triArea,
-                                       .gamma = gammaArea / triArea };
-    }
-
-
-    BarycentricCoordinates Renderer::computeBaryCentricCoordinates(const flcn::CVec2F& v0, const flcn::CVec2F& v1,
-                                                                   const flcn::CVec2F& v2, const flcn::CVec2F& point,
-                                                                   const float triArea) noexcept
-    {
-        const auto alphaArea = 0.5f * (v2 - v1).cross(point - v1);
-        const auto betaArea  = 0.5f * (v0 - v2).cross(point - v2);
-        const auto gammaArea = 0.5f * (v1 - v0).cross(point - v0);
-
-        return BarycentricCoordinates{ .alpha = alphaArea / triArea,
-                                       .beta  = betaArea / triArea,
-                                       .gamma = gammaArea / triArea };
-    }
-
-
-    bool Renderer::isTopLeftEdge(const flcn::CVec2F& v0, const flcn::CVec2F& v1) noexcept
-    {
-        const auto edge = v1 - v0;
-        // Top Left if edge's x coordinate is positive (negative is bottom edge due to clockwise convention
-        // used) and if y coordinate is 0
-        const auto isTopEdge = edge.x() >= EPSILON && std::abs(edge.y()) < EPSILON;
-        // Left Edge if y coordinate is >=0
-        const auto isLeftEdge = edge.y() >= 1e-5;
-
-        return isTopEdge && isLeftEdge;
-    }
-
-
-    void Renderer::putPixel(const size_t bufferOffset, const uint8_t r, const uint8_t g, const uint8_t b,
-                            const uint8_t a) const noexcept
-    {
-
-        if constexpr (std::endian::native == std::endian::big)
-        {
-            // ARGB
-            frameBuffer[bufferOffset]     = r;
-            frameBuffer[bufferOffset + 1] = g;
-            frameBuffer[bufferOffset + 2] = b;
-            frameBuffer[bufferOffset + 3] = a;
-        }
-        else if constexpr (std::endian::native == std::endian::little)
-        {
-            // BGRA
-            frameBuffer[bufferOffset]     = b;
-            frameBuffer[bufferOffset + 1] = g;
-            frameBuffer[bufferOffset + 2] = r;
-            frameBuffer[bufferOffset + 3] = a;
-        }
-    }
-
-
     BoundingBox Renderer::computeBoundingBox(const flcn::CVec2F& v0, const flcn::CVec2F& v1,
                                              const flcn::CVec2F& v2) noexcept
     {
@@ -295,8 +298,8 @@ namespace colloid
     {
         std::vector vertices(mesh.position.begin(), mesh.position.end());
 
-        auto view  = flcn::Mat4F::identity();
-        view(2, 3) = -4;
+        // auto view  = flcn::Mat4F::identity();
+        // view(2, 3) = -4;
         // view(1, 3) = -4;
         // NOTE: The near and far planes are switched to ensure higher precision for the depth testing as
         //       with opposite order almost all the values are clumped near the 0.97 range(For Utah Teapot).

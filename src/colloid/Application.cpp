@@ -90,6 +90,7 @@ namespace colloid
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
+            _mainCamera.handleSDLEvent(event);
             ImGui_ImplSDL3_ProcessEvent(&event); // Forward your event to backend
             // (You should discard mouse/keyboard messages in your game/engine when
             // io.WantCaptureMouse/io.WantCaptureKeyboard are set.)
@@ -185,8 +186,8 @@ namespace colloid
     void Application::run() noexcept
     {
         // TODO: Move from run
-        auto modelPath = std::filesystem::path("models") / "utah_teapot.obj";
-        // auto modelPath = std::filesystem::path("models") / "suzanne.obj";
+        // auto modelPath = std::filesystem::path("models") / "utah_teapot.obj";
+        auto modelPath = std::filesystem::path("models") / "suzanne.obj";
         // auto modelPath = std::filesystem::path("models") / "Cube.obj";
         ObjectParser parser;
         auto mesh = parser.parse(modelPath.string());
@@ -197,7 +198,8 @@ namespace colloid
         while (_isRunning)
         {
             _renderer.clearScreen();
-            _renderer.render(mesh, rotationAngle);
+            _renderer.updateView(_mainCamera.getViewMatrix());
+            _renderer.render(mesh, 0.0f);
             blitTexture();
 
             colloid::imgui::beginFrame();
@@ -205,8 +207,9 @@ namespace colloid
             renderWidgets();
             colloid::imgui::endFrame(_device, _window);
             pollEvent();
+            _mainCamera.update();
 
-            rotationAngle += 0.01f;
+            // rotationAngle += 0.01f;
         }
 
 

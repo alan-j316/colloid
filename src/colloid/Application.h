@@ -10,6 +10,7 @@
  */
 
 
+#include "Camera.h"
 #include "colloid/Renderer.h"
 #include "parsers/ObjectParser.h"
 
@@ -45,6 +46,8 @@ namespace colloid
         bool _isRunning{ false };
         int _width{ 1280 }, _height{ 720 }, _colorChannels{ 4 };
         Renderer _renderer;
+
+        Camera _mainCamera{};
     };
 
 } // namespace colloid

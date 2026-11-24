@@ -9,15 +9,20 @@
  * @copyright Copyright (c) 2026 Alan Abraham P Kochumon
  */
 
-#include <SDL3/SDL.h>
+
+
 #include <falcon/Falcon.h>
+
+/// Forward declaration
+union SDL_Event;
 
 namespace colloid
 {
     class Camera
     {
-        static constexpr float MOVE_SENSITIVITY  = 0.001f;
-        static constexpr float MOUSE_SENSITIVITY = 0.001f;
+    public:
+        static constexpr float MOVE_SENSITIVITY  = 0.01f;
+        static constexpr float MOUSE_SENSITIVITY = 0.0f; // 0.00001f; TODO: Fix swinging
 
         [[nodiscard]] flcn::Mat4F getViewMatrix() const noexcept
         {
@@ -48,58 +53,12 @@ namespace colloid
         }
 
 
-        inline void handleSDLEvent(SDL_Event& e)
-        {
-            if (e.type == SDL_EVENT_KEY_DOWN)
-            {
-                if (e.key.scancode == SDL_SCANCODE_W)
-                {
-                    _velocity.z() = -1;
-                }
-                if (e.key.scancode == SDL_SCANCODE_S)
-                {
-                    _velocity.z() = 1;
-                }
-                if (e.key.scancode == SDL_SCANCODE_A)
-                {
-                    _velocity.x() = -1;
-                }
-                if (e.key.scancode == SDL_SCANCODE_D)
-                {
-                    _velocity.x() = 1;
-                }
-            }
+        void handleSDLEvent(SDL_Event& e) noexcept;
 
-            if (e.type == SDL_EVENT_KEY_UP)
-            {
-                if (e.key.scancode == SDL_SCANCODE_W)
-                {
-                    _velocity.z() = 0;
-                }
-                if (e.key.scancode == SDL_SCANCODE_S)
-                {
-                    _velocity.z() = 0;
-                }
-                if (e.key.scancode == SDL_SCANCODE_A)
-                {
-                    _velocity.x() = 0;
-                }
-                if (e.key.scancode == SDL_SCANCODE_D)
-                {
-                    _velocity.x() = 0;
-                }
-            }
-
-            if (e.type == SDL_EVENT_MOUSE_MOTION)
-            {
-                _yaw += e.motion.xrel / MOUSE_SENSITIVITY;
-                _pitch -= e.motion.yrel / MOUSE_SENSITIVITY;
-            }
-        }
 
 
     private:
         float _yaw = 0, _pitch = 0;
-        flcn::Vec3F _velocity, _position;
+        flcn::Vec3F _velocity, _position{0, 0, 4};
     };
 } // namespace colloid

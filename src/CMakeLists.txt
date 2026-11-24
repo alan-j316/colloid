@@ -10,6 +10,7 @@ target_sources(
         Main.cpp
         colloid/Renderer.cpp
         colloid/Application.cpp
+        colloid/Camera.cpp
         colloid/parsers/TinyObjImpl.cpp
 
         PRIVATE
