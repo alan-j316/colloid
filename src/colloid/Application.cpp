@@ -113,23 +113,23 @@ namespace colloid
         SDL_GPUTransferBufferCreateInfo stagingBufferInfo = {};
         stagingBufferInfo.usage                           = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
         stagingBufferInfo.size                            = _width * _height * 4;
-        SDL_GPUTransferBuffer* stagingBuffer              = SDL_CreateGPUTransferBuffer(_device, &stagingBufferInfo);
-        assert(stagingBuffer != nullptr);
+        SDL_GPUTransferBuffer* pStagingBuffer             = SDL_CreateGPUTransferBuffer(_device, &stagingBufferInfo);
+        assert(pStagingBuffer != nullptr);
 
         // Copy the frame buffer to the staging buffer
-        void* pTexture = SDL_MapGPUTransferBuffer(_device, stagingBuffer, true);
+        void* pTexture = SDL_MapGPUTransferBuffer(_device, pStagingBuffer, true);
         memcpy(pTexture, _renderer.frameBuffer, static_cast<size_t>(_width * _height * 4));
-        SDL_UnmapGPUTransferBuffer(_device, stagingBuffer);
+        SDL_UnmapGPUTransferBuffer(_device, pStagingBuffer);
 
         // Submit the staging buffer with a copy/transfer pass.
-        const SDL_GPUTextureTransferInfo transferInfo{ .transfer_buffer = stagingBuffer, .offset = 0 };
+        const SDL_GPUTextureTransferInfo transferInfo{ .transfer_buffer = pStagingBuffer, .offset = 0 };
 
-        SDL_GPUTextureRegion textureRegion = { .texture = _renderTexture,
-                                               .x       = 0,
-                                               .y       = 0,
-                                               .w       = static_cast<uint32_t>(_width),
-                                               .h       = static_cast<uint32_t>(_height),
-                                               .d       = 1 };
+        const SDL_GPUTextureRegion textureRegion = { .texture = _renderTexture,
+                                                     .x       = 0,
+                                                     .y       = 0,
+                                                     .w       = static_cast<uint32_t>(_width),
+                                                     .h       = static_cast<uint32_t>(_height),
+                                                     .d       = 1 };
 
         // Upload
         SDL_GPUCommandBuffer* pCmdBuffer = SDL_AcquireGPUCommandBuffer(_device);
@@ -138,7 +138,7 @@ namespace colloid
         SDL_EndGPUCopyPass(pCopyPass);
         SDL_SubmitGPUCommandBuffer(pCmdBuffer);
         // TODO: TODO REMOVE THIS AND MAKE THE STAGING BUFFER PERMANENT
-        SDL_ReleaseGPUTransferBuffer(_device, stagingBuffer);
+        SDL_ReleaseGPUTransferBuffer(_device, pStagingBuffer);
     }
 
 
@@ -151,6 +151,7 @@ namespace colloid
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
         // NOLINTBEGIN
         constexpr ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
@@ -161,7 +162,7 @@ namespace colloid
         ImGui::Begin("Rasterization Output", nullptr, windowFlags);
         ImGui::Image(static_cast<ImTextureID>(reinterpret_cast<intptr_t>(_renderTexture)),
                      ImVec2(static_cast<float>(_width), static_cast<float>(_height)));
-        ImGui::PopStyleVar(2);
+        ImGui::PopStyleVar(3);
         ImGui::End();
     }
 

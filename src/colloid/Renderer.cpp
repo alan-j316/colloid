@@ -198,7 +198,7 @@ namespace colloid
 
     void Renderer::clearScreen() const noexcept
     {
-        std::memset(frameBuffer, clearColor, static_cast<size_t>(width * height * colorChannels));
+        std::memset(frameBuffer, 123, static_cast<size_t>(width * height * colorChannels));
         // Clear the depth buffer
         std::memset(depthBuffer, 0, static_cast<size_t>(width * height * 4));
     }
@@ -288,7 +288,7 @@ namespace colloid
 
     void Renderer::render(const Mesh& mesh, const float deg) noexcept
     {
-        std::vector<flcn::Vec3<float>> vertices(mesh.vertices.begin(), mesh.vertices.end());
+        std::vector vertices(mesh.vertices.begin(), mesh.vertices.end());
 
         auto view  = flcn::Mat4F::identity();
         view(2, 3) = -3;
