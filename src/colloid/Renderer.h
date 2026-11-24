@@ -274,7 +274,7 @@ namespace colloid
          *
          * @param mesh The mesh to render.
          */
-        void render(const Mesh& mesh, [[maybe_unused]] float deg) noexcept;
+        void render(const MeshObject& mesh, [[maybe_unused]] float deg) noexcept;
 
         // TODO: REPLACE WITH FLCN ONE
         flcn::Mat4F makePersp(const float aspect, const float fov, const float far, const float near)

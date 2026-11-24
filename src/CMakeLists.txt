@@ -10,12 +10,14 @@ target_sources(
         Main.cpp
         colloid/Renderer.cpp
         colloid/Application.cpp
+        colloid/parsers/TinyObjImpl.cpp
 
         PRIVATE
         FILE_SET HEADERS
         BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
         FILES
         colloid/Renderer.h
+        colloid/Random.h
         colloid/parsers/ObjectParser.h
         colloid/Mesh.h
         colloid/Application.h
@@ -38,6 +40,7 @@ target_link_libraries(
         SDL3::SDL3
         fast_float
         fastgltf::fastgltf
+        tinyobjloader
         # ${APPLICATION_NAME}-StrictWarnings # TODO: Add back after fixing warnings
         # ${APPLICATION_NAME}-ProjectSanitizers # TODO: Add back after fixing warnings
 

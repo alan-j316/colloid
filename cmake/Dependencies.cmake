@@ -54,6 +54,13 @@ FetchContent_Declare(
         SYSTEM
 )
 
+FetchContent_Declare(
+        tinyobj
+        GIT_REPOSITORY https://github.com/tinyobjloader/tinyobjloader.git
+        GIT_TAG release
+        SYSTEM
+)
+
 
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE) # Disables google benchmark from creating its own test suite
 
@@ -64,6 +71,7 @@ FetchContent_MakeAvailable(sdl3)
 FetchContent_MakeAvailable(fast-float)
 FetchContent_MakeAvailable(fast-gltf)
 FetchContent_MakeAvailable(imgui)
+FetchContent_MakeAvailable(tinyobj)
 
 
 # DearImGui doesn't have CMake support so we have to create a standalone static library for it.

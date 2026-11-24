@@ -201,11 +201,13 @@ namespace colloid
         std::memset(depthBuffer, 0, static_cast<size_t>(width * height * 4));
     }
 
+
     Renderer::~Renderer() noexcept
     {
         delete[] frameBuffer;
         delete[] depthBuffer;
     }
+
 
     BarycentricCoordinates Renderer::computeBaryCentricCoordinates(const flcn::Vec2F& v0, const flcn::Vec2F& v1,
                                                                    const flcn::Vec2F& v2,
@@ -284,9 +286,9 @@ namespace colloid
         };
     }
 
-    void Renderer::render(const Mesh& mesh, const float deg) noexcept
+    void Renderer::render(const MeshObject& mesh, const float deg) noexcept
     {
-        std::vector vertices(mesh.vertices.begin(), mesh.vertices.end());
+        std::vector vertices(mesh.position.begin(), mesh.position.end());
 
         auto view  = flcn::Mat4F::identity();
         view(2, 3) = -4;
@@ -303,15 +305,16 @@ namespace colloid
         }
 
 
-        [[maybe_unused]] size_t i = 0;
-        for (const auto& index : mesh.indices)
+        for (uint32_t idx = 0; idx < mesh.indices.size(); idx += 3)
         {
-            const auto i0 = static_cast<size_t>(index.x());
-            const auto i1 = static_cast<size_t>(index.y());
-            const auto i2 = static_cast<size_t>(index.z());
+            const auto i0 = mesh.indices[idx];
+            const auto i1 = mesh.indices[idx + 1];
+            const auto i2 = mesh.indices[idx + 2];
             // FIXME: Test code
-            const auto faceColor = mesh.colors[i++];
-            renderTriangle(vertices[i0], vertices[i1], vertices[i2], faceColor.r(), faceColor.g(), faceColor.b(), 0xff);
+            const auto faceColor = mesh.color[idx];
+            // renderTriangle(vertices[i0], vertices[i1], vertices[i2], static_cast<uint8_t>(faceColor.r() * 255),
+            // static_cast<uint8_t>(faceColor.g() * 255), static_cast<uint8_t>(faceColor.b() * 255), 0xff);
+            renderTriangle(vertices[i0], vertices[i1], vertices[i2], 0xff, 0xff, 0xff, 0xff);
             // renderTriangle(vertices[i0], vertices[i1], vertices[i2], 0xff, 0xff, 0xff, 0xff);
             // const auto v0 = vertices[i0].swizzle<flcn::axis::X, flcn::axis::Y>();
             // const auto v1 = vertices[i1].swizzle<flcn::axis::X, flcn::axis::Y>();

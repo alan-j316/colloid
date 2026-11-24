@@ -16,6 +16,8 @@
 
 namespace colloid
 {
+
+    // Deprecated!
     class Mesh
     {
     public:
@@ -26,5 +28,13 @@ namespace colloid
         flcn::Vec3F minVertexValue{ flcn::constants::INFINITY_F, flcn::constants::INFINITY_F,
                                     flcn::constants::INFINITY_F },
             maxVertexValue{ -flcn::constants::INFINITY_F, -flcn::constants::INFINITY_F, -flcn::constants::INFINITY_F };
+    };
+
+    struct MeshObject
+    {
+        std::vector<uint32_t> indices;
+        std::vector<flcn::Vec3F> position;
+        std::vector<flcn::CVec2F> uv;
+        std::vector<flcn::Vec4F> color;
     };
 } // namespace demo
