@@ -186,8 +186,7 @@ namespace colloid
 
 
         // Cross between two edges, v0v1(v1 - v0) and v0v2(v2 - v0)
-        const auto triArea = (projV1 - projV0).cross(projV2 - projV0) * 0.5f;
-
+        const auto triArea  = (projV1 - projV0).cross(projV2 - projV0) * 0.5f;
         // Backface culling
         if (triArea < 0.0f) // Triangle is inverted or less than 1 px
         {
@@ -319,16 +318,7 @@ namespace colloid
             const auto i1 = mesh.indices[idx + 1];
             const auto i2 = mesh.indices[idx + 2];
             // FIXME: Test code
-            const auto faceColor = mesh.color[idx];
-            // renderTriangle(vertices[i0], vertices[i1], vertices[i2], static_cast<uint8_t>(faceColor.r() * 255),
-            // static_cast<uint8_t>(faceColor.g() * 255), static_cast<uint8_t>(faceColor.b() * 255), 0xff);
-            // renderTriangle(vertices[i0], vertices[i1], vertices[i2], 0xff, 0xff, 0xff, 0xff);
             renderTriangle(vertices[i0], vertices[i1], vertices[i2], mesh.color[i0], mesh.color[i1], mesh.color[i2]);
-            // renderTriangle(vertices[i0], vertices[i1], vertices[i2], 0xff, 0xff, 0xff, 0xff);
-            // const auto v0 = vertices[i0].swizzle<flcn::axis::X, flcn::axis::Y>();
-            // const auto v1 = vertices[i1].swizzle<flcn::axis::X, flcn::axis::Y>();
-            // const auto v2 = vertices[i2].swizzle<flcn::axis::X, flcn::axis::Y>();
-            // renderTriangleWireframe(v0, v1, v2);
         }
     }
 } // namespace colloid
