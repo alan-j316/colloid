@@ -186,7 +186,7 @@ namespace colloid
 
 
         // Cross between two edges, v0v1(v1 - v0) and v0v2(v2 - v0)
-        const auto triArea  = (projV1 - projV0).cross(projV2 - projV0) * 0.5f;
+        const auto triArea = (projV1 - projV0).cross(projV2 - projV0) * 0.5f;
         // Backface culling
         if (triArea < 0.0f) // Triangle is inverted or less than 1 px
         {
@@ -310,6 +310,7 @@ namespace colloid
         {
             vert = perVertex(vert, { .model = model, .view = view, .projection = proj });
         }
+        // std::cout << "Vertices: " << vertices.size() << '\n';
 
 
         for (uint32_t idx = 0; idx < mesh.indices.size(); idx += 3)

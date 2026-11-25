@@ -24,6 +24,7 @@
 #include <string_view>
 #include <tiny_obj_loader.h>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace colloid
 {
@@ -142,6 +143,8 @@ namespace colloid
             // readerConfig.mtl_search_path = "./"; // Path to material files
             tinyobj::ObjReader reader;
 
+            std::unordered_map<int, size_t> vertexDuplicates;
+
             if (!reader.ParseFromFile(filename, readerConfig))
             {
                 if (!reader.Error().empty())
@@ -175,16 +178,21 @@ namespace colloid
                     {
                         // access to vertex
                         auto [vertexIdx, normalIdx, texCoordIdx] = shape.mesh.indices[indexOffset + v];
-                        mesh.position.emplace_back(attrib.vertices[3 * static_cast<size_t>(vertexIdx) + 0],
-                                                   attrib.vertices[3 * static_cast<size_t>(vertexIdx) + 1],
-                                                   attrib.vertices[3 * static_cast<size_t>(vertexIdx) + 2]);
-                        if (texCoordIdx >= 0)
+                        auto [it, added] = vertexDuplicates.insert({ vertexIdx, mesh.position.size() });
+                        if (added)
                         {
-                            mesh.uv.emplace_back(attrib.texcoords[2 * static_cast<size_t>(texCoordIdx) + 0],
-                                                 attrib.texcoords[2 * static_cast<size_t>(texCoordIdx) + 1]);
+                            mesh.position.emplace_back(attrib.vertices[3 * static_cast<size_t>(vertexIdx) + 0],
+                                                       attrib.vertices[3 * static_cast<size_t>(vertexIdx) + 1],
+                                                       attrib.vertices[3 * static_cast<size_t>(vertexIdx) + 2]);
+                            if (texCoordIdx >= 0)
+                            {
+                                mesh.uv.emplace_back(attrib.texcoords[2 * static_cast<size_t>(texCoordIdx) + 0],
+                                                     attrib.texcoords[2 * static_cast<size_t>(texCoordIdx) + 1]);
+                            }
+                            mesh.color.emplace_back(genRandom(), genRandom(), genRandom(),
+                                                    1.0f); // 1.0f for alpha channel
                         }
-                        mesh.indices.emplace_back(static_cast<uint32_t>(mesh.indices.size()));
-                        mesh.color.emplace_back(genRandom(), genRandom(), genRandom(), 1.0f); // 1.0f for alpha channel
+                        mesh.indices.emplace_back(static_cast<uint32_t>(it->second));
 
                         // Check if `normal_index` is zero or positive. negative = no normal data
                         // if (normal_index >= 0)
