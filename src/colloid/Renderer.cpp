@@ -267,14 +267,14 @@ namespace colloid
         const auto proj = makePersp(static_cast<float>(width) / static_cast<float>(height), 1.22, 0.1f, 1000.0f);
         // const auto proj = makeOrtho(-1, 1, -1, 1, -1, 1);
         auto model  = flcn::Mat4F::makeRotationY(deg);
-        model(1, 3) = 0;
+        // model(1, 3) = 0;
         for (auto& vert : vertices)
         {
             vert = perVertex(vert, { .model = model, .view = view, .projection = proj });
         }
         // std::cout << "Vertices: " << vertices.size() << '\n';
 
-
+        // TODO: Add trivial multi-threading using std::for_each
         for (uint32_t idx = 0; idx < mesh.indices.size(); idx += 3)
         {
             const auto i0 = mesh.indices[idx];

@@ -14,7 +14,7 @@
 
 namespace colloid
 {
-    void Camera::handleSDLEvent(SDL_Event& e) noexcept
+    void Camera::handleSDLEvent(const SDL_Event& e) noexcept
     {
         if (e.type == SDL_EVENT_KEY_DOWN)
         {
@@ -33,6 +33,14 @@ namespace colloid
             if (e.key.scancode == SDL_SCANCODE_D)
             {
                 _velocity.x() = 1;
+            }
+            if (e.key.scancode == SDL_SCANCODE_Q)
+            {
+                _velocity.y() = -1;
+            }
+            if (e.key.scancode == SDL_SCANCODE_E)
+            {
+                _velocity.y() = 1;
             }
         }
 
@@ -53,6 +61,14 @@ namespace colloid
             if (e.key.scancode == SDL_SCANCODE_D)
             {
                 _velocity.x() = 0;
+            }
+            if (e.key.scancode == SDL_SCANCODE_Q)
+            {
+                _velocity.y() = 0;
+            }
+            if (e.key.scancode == SDL_SCANCODE_E)
+            {
+                _velocity.y() = 0;
             }
         }
 

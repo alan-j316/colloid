@@ -186,8 +186,8 @@ namespace colloid
     void Application::run() noexcept
     {
         // TODO: Move from run
-        // auto modelPath = std::filesystem::path("models") / "utah_teapot.obj";
-        auto modelPath = std::filesystem::path("models") / "suzanne.obj";
+        auto modelPath = std::filesystem::path("models") / "utah_teapot.obj";
+        // auto modelPath = std::filesystem::path("models") / "suzanne.obj";
         // auto modelPath = std::filesystem::path("models") / "Cube.obj";
         ObjectParser parser;
         auto mesh = parser.parse(modelPath.string());

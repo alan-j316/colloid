@@ -53,7 +53,7 @@ namespace colloid
         }
 
 
-        void handleSDLEvent(SDL_Event& e) noexcept;
+        void handleSDLEvent(const SDL_Event& e) noexcept;
 
 
 
