@@ -93,35 +93,6 @@ namespace colloid
 
     void Renderer::updateView(const flcn::Mat4F& v) noexcept { this->view = v; }
 
-    BarycentricCoordinates Renderer::computeBaryCentricCoordinates(const flcn::Vec2F& v0, const flcn::Vec2F& v1,
-                                                                   const flcn::Vec2F& v2,
-                                                                   const flcn::Vec2F& point) const noexcept
-    {
-        // Division by two is omitted since that is common in smaller triangles area too
-        const auto triArea   = (v1 - v0).cross(v2 - v1);
-        const auto alphaArea = (v2 - v1).cross(point - v1);
-        const auto betaArea  = (v0 - v2).cross(point - v2);
-        const auto gammaArea = (v1 - v0).cross(point - v0);
-
-        return BarycentricCoordinates{ .alpha = alphaArea / triArea,
-                                       .beta  = betaArea / triArea,
-                                       .gamma = gammaArea / triArea };
-    }
-
-
-    BarycentricCoordinates Renderer::computeBaryCentricCoordinates(const flcn::CVec2F& v0, const flcn::CVec2F& v1,
-                                                                   const flcn::CVec2F& v2, const flcn::CVec2F& point,
-                                                                   const float triArea) noexcept
-    {
-        const auto alphaArea = 0.5f * (v2 - v1).cross(point - v1);
-        const auto betaArea  = 0.5f * (v0 - v2).cross(point - v2);
-        const auto gammaArea = 0.5f * (v1 - v0).cross(point - v0);
-
-        return BarycentricCoordinates{ .alpha = alphaArea / triArea,
-                                       .beta  = betaArea / triArea,
-                                       .gamma = gammaArea / triArea };
-    }
-
 
     bool Renderer::isTopLeftEdge(const flcn::CVec2F& v0, const flcn::CVec2F& v1) noexcept
     {
@@ -248,11 +219,6 @@ namespace colloid
                 //     std::cout << std::format("w0 {} w1 {} w2 {}\n", w0, w1, w2);
                 // }
 
-                // putPixel(colorOffset, r, g, b, a);
-                // auto w02    = edgeCross(projV1, projV2, point);
-                // auto w12    = edgeCross(projV2, projV0, point);
-                // auto w22    = edgeCross(projV0, projV2, point);
-                //
                 // Edge cross && Depth buffer-based culling
                 if ((std::bit_cast<int32_t>(w0) | std::bit_cast<int32_t>(w1) | std::bit_cast<int32_t>(w2)) >= 0 &&
                     currentPixelDepth >= depthBuffer[offset])
@@ -265,10 +231,6 @@ namespace colloid
 
                     // Update depth buffer
                     depthBuffer[offset] = currentPixelDepth;
-
-                    // Depth buffer rendering
-                    // const auto depthColor = static_cast<uint8_t>(depthBuffer[offset] * 50);
-                    // putPixel(colorOffset, depthColor, depthColor, depthColor);
                 }
 
                 w0 += a01;

@@ -137,7 +137,6 @@ namespace colloid
         {
             MeshObject mesh{};
             std::cout << "Parsing Mesh: " << filename << "...\n";
-            // TODO: A vertex deduplication
 
             tinyobj::ObjReaderConfig readerConfig;
             // readerConfig.mtl_search_path = "./"; // Path to material files

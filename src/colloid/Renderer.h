@@ -20,9 +20,6 @@ namespace colloid
 {
     inline constexpr auto EPSILON = 1e-6;
 
-    struct BarycentricCoordinates
-    { float alpha, beta, gamma; };
-
     struct BoundingBox
     { int32_t top, left, right, bottom; };
 
@@ -118,32 +115,6 @@ namespace colloid
 
 
         /**
-         * Compute the barycenter coordinate of @p point.
-         * @param v0 The first vertex of the triangle.
-         * @param v1 The second vertex of the triangle.
-         * @param v2 The last vertex of the triangle.
-         * @param point The point to compute the barycentric coordinates of.
-         * @return The barycentric coordinate of @ref point.
-         */
-        BarycentricCoordinates computeBaryCentricCoordinates(const flcn::Vec2F& v0, const flcn::Vec2F& v1,
-                                                             const flcn::Vec2F& v2,
-                                                             const flcn::Vec2F& point) const noexcept;
-
-        /**
-         * Compute the barycenter coordinate of @p point.
-         * @param v0 The first vertex of the triangle.
-         * @param v1 The second vertex of the triangle.
-         * @param v2 The last vertex of the triangle.
-         * @param point The point to compute the barycentric coordinates of.
-         * @param triArea The area of the enclosing triangle.
-         * @return The barycentric coordinate of @ref point.
-         */
-        static BarycentricCoordinates computeBaryCentricCoordinates(const flcn::CVec2F& v0, const flcn::CVec2F& v1,
-                                                                    const flcn::CVec2F& v2, const flcn::CVec2F& point,
-                                                                    float triArea) noexcept;
-
-
-        /**
          * @brief Compute if the edge formed by @p v0 and @p v1 is a left or top edge.
          * @param v0 The first vertex of the edge.
          * @param v1 The second vertex of the edge.
@@ -163,19 +134,7 @@ namespace colloid
          */
         void putPixel(size_t bufferOffset, uint8_t r, uint8_t g, uint8_t b, uint8_t a = 0xff) const noexcept;
 
-        // minValue-> Lowest vertex value
-        // // maxValue -> Highest vertex value
-        // template <typename T>
-        // flcn::Vec2<T> toScreenSpace(const flcn::Vec3<T>& vec) const
-        // {
-        //     // Convert from -1 to 1 to 0 to 2
-        //     // Then from 0 to 2 to 0 to 1
-        //     // Finally multiply it screen width and height
-        //     return flcn::Vec2<T>{
-        //         (vec.x() + 1) * 0.5f * width,
-        //         (vec.y() + 1) * 0.5f * height,
-        //     };
-        // }
+
         void renderTriangle(const flcn::Vec3F& v0, const flcn::Vec3F& v1, const flcn::Vec3F& v2, const flcn::Vec4F& c0,
                             const flcn::Vec4F& c1, const flcn::Vec4F& c2) noexcept;
 
@@ -189,21 +148,6 @@ namespace colloid
         static BoundingBox computeBoundingBox(const flcn::CVec2F& v0, const flcn::CVec2F& v1,
                                               const flcn::CVec2F& v2) noexcept;
 
-
-        /**
-         * Render the given triangle into the frame buffer.
-         * @tparam T The numeric type of the vertices.
-         * @param v0 The first vertex of the triangle.
-         * @param v1 The second vertex of the triangle.
-         * @param v2 The last vertex of the triangle.
-         * @param r The red-channel of the triangle.
-         * @param g The green-channel of the triangle.
-         * @param b The blue-channel of the triangle.
-         * @param a The alpha-channel of the triangle.
-         */
-        template <typename T>
-        void renderTriangle(const flcn::Vec3<T>& v0, const flcn::Vec3<T>& v1, const flcn::Vec3<T>& v2, uint8_t r = 0xff,
-                            uint8_t g = 0xff, uint8_t b = 0xff, uint8_t a = 0xff) const noexcept;
 
 
         // TODO: REMOVE TEMPORARY METHOD
