@@ -36,5 +36,6 @@ namespace colloid
         std::vector<flcn::Vec3F> position;
         std::vector<flcn::CVec2F> uv;
         std::vector<flcn::Vec4F> color;
+        std::vector<flcn::Vec3F> normals;
     };
 } // namespace demo

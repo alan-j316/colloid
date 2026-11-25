@@ -180,31 +180,32 @@ namespace colloid
                         auto [it, added] = vertexDuplicates.insert({ vertexIdx, mesh.position.size() });
                         if (added)
                         {
+                            // Position
                             mesh.position.emplace_back(attrib.vertices[3 * static_cast<size_t>(vertexIdx) + 0],
                                                        attrib.vertices[3 * static_cast<size_t>(vertexIdx) + 1],
                                                        attrib.vertices[3 * static_cast<size_t>(vertexIdx) + 2]);
+                            // Texture Coordinates
                             if (texCoordIdx >= 0)
                             {
                                 mesh.uv.emplace_back(attrib.texcoords[2 * static_cast<size_t>(texCoordIdx) + 0],
                                                      attrib.texcoords[2 * static_cast<size_t>(texCoordIdx) + 1]);
                             }
-                            mesh.color.emplace_back(genRandom(), genRandom(), genRandom(),
-                                                    1.0f); // 1.0f for alpha channel
+
+                            // Normals
+                            if (normalIdx >= 0)
+                            {
+                                mesh.normals.emplace_back(attrib.normals[3 * static_cast<size_t>(normalIdx) + 0],
+                                                          attrib.normals[3 * static_cast<size_t>(normalIdx) + 1],
+                                                          attrib.normals[3 * static_cast<size_t>(normalIdx) + 2]);
+                            }
+                            // Normalize the normal values from -1 to 1 to 0 to 1
+                            mesh.color.emplace_back((mesh.normals[it->second] + flcn::Vec3F(1.0f, 1.0f, 1.0f)) * 0.5f, 1.0f);
+                            // Random vertex colors
+                            // mesh.color.emplace_back(genRandom(), genRandom(), genRandom(),
+                            //                         1.0f); // 1.0f for alpha channel
                         }
+                        // Indices
                         mesh.indices.emplace_back(static_cast<uint32_t>(it->second));
-
-                        // Check if `normal_index` is zero or positive. negative = no normal data
-                        // if (normal_index >= 0)
-                        // {
-                        //     tinyobj::real_t nx = attrib.normals[3 * size_t(normal_index) + 0];
-                        //     tinyobj::real_t ny = attrib.normals[3 * size_t(normal_index) + 1];
-                        //     tinyobj::real_t nz = attrib.normals[3 * size_t(normal_index) + 2];
-                        // }
-
-                        // Optional: vertex colors
-                        // tinyobj::real_t red   = attrib.colors[3*size_t(idx.vertex_index)+0];
-                        // tinyobj::real_t green = attrib.colors[3*size_t(idx.vertex_index)+1];
-                        // tinyobj::real_t blue  = attrib.colors[3*size_t(idx.vertex_index)+2];
                     }
                     indexOffset += fv;
 
