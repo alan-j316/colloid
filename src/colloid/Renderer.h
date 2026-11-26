@@ -186,7 +186,7 @@ namespace colloid
             auto vec = args.projection * args.view * args.model * flcn::Vec4(vertex, 1.0f);
             // Perspective Divide
             const auto w = vec.w();
-            if (flcn::abs(w) >= flcn::Config::EPSILON<float>)
+            if (w >= flcn::Config::EPSILON<float>)
             {
                 vec /= w;
             }

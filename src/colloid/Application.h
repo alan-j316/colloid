@@ -23,6 +23,13 @@ struct SDL_GPUTexture;
 
 namespace colloid
 {
+    struct ApplicationStats
+    {
+        float frameTime;
+        float updateTime;
+        float drawTime;
+    };
+
     class Application
     {
     public:
@@ -46,6 +53,7 @@ namespace colloid
         bool _isRunning{ false };
         int _width{ 1280 }, _height{ 720 }, _colorChannels{ 4 };
         Renderer _renderer;
+        ApplicationStats _stats;
 
         Camera _mainCamera{};
     };

@@ -45,11 +45,11 @@ namespace colloid
             return rotPitch * rotYaw;
         }
 
-        inline void update()
+        inline void update(const float deltaTime)
         {
             const auto rotation = getRotationMatrix();
-            _position += (rotation * flcn::Vec4F(_velocity * MOVE_SENSITIVITY, 0.0f))
-                            .swizzle<flcn::axis::X, flcn::axis::Y, flcn::axis::Z>();
+            _position += (rotation * flcn::Vec4F(_velocity * MOVE_SENSITIVITY * deltaTime, 0.0f))
+                             .swizzle<flcn::axis::X, flcn::axis::Y, flcn::axis::Z>();
         }
 
 
@@ -59,6 +59,6 @@ namespace colloid
 
     private:
         float _yaw = 0, _pitch = 0;
-        flcn::Vec3F _velocity, _position{0, 0, 4};
+        flcn::Vec3F _velocity, _position{ 0, 0, 4 };
     };
 } // namespace colloid

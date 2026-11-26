@@ -179,6 +179,7 @@ namespace colloid
         const auto& io = ImGui::GetIO();
         ImGui::Begin("Rendering Timings");
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+        ImGui::Text("Frame time: %.3f ms/frame (%.1f FPS)", _stats.frameTime, io.Framerate);
         ImGui::End();
     }
 
@@ -186,28 +187,38 @@ namespace colloid
     void Application::run() noexcept
     {
         // TODO: Move from run
-        auto modelPath = std::filesystem::path("models") / "utah_teapot.obj";
-        // auto modelPath = std::filesystem::path("models") / "suzanne.obj";
+        // auto modelPath = std::filesystem::path("models") / "utah_teapot.obj";
+        auto modelPath = std::filesystem::path("models") / "suzanne.obj";
         // auto modelPath = std::filesystem::path("models") / "Cube.obj";
         ObjectParser parser;
-        auto mesh = parser.parse(modelPath.string());
-
-        _isRunning = true;
-
+        auto mesh           = parser.parse(modelPath.string());
+        _isRunning          = true;
         float rotationAngle = 0.0f;
+
+        auto lastTime = std::chrono::steady_clock::now();
         while (_isRunning)
         {
-            _renderer.clearScreen();
+            pollEvent();
+
+            auto currentTime      = std::chrono::steady_clock::now();
+            auto elapsed          = std::chrono::duration_cast<std::chrono::microseconds>(currentTime - lastTime);
+            const float deltaTime = static_cast<float>(elapsed.count()) / 1000.0f;
+            _mainCamera.update(deltaTime);
+            _stats.frameTime = deltaTime;
+
+            lastTime = currentTime;
+
             _renderer.updateView(_mainCamera.getViewMatrix());
+
+            _renderer.clearScreen();
             _renderer.render(mesh, 0.0f);
             blitTexture();
-
             colloid::imgui::beginFrame();
             renderRasterizedOutput();
             renderWidgets();
             colloid::imgui::endFrame(_device, _window);
-            pollEvent();
-            _mainCamera.update();
+
+
 
             // rotationAngle += 0.01f;
         }
