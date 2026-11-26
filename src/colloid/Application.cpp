@@ -179,7 +179,9 @@ namespace colloid
         const auto& io = ImGui::GetIO();
         ImGui::Begin("Rendering Timings");
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-        ImGui::Text("Frame time: %.3f ms/frame (%.1f FPS)", _stats.frameTime, io.Framerate);
+        ImGui::Text("Frame time: %.3f ms/frame (%.1f FPS)", _stats.frameTime, 1000.0f / _stats.frameTime);
+        ImGui::Text("Update time: %.3f ms/frame ", _stats.updateTime);
+        ImGui::Text("Draw time: %.3f ms/frame", _stats.drawTime);
         ImGui::End();
     }
 
@@ -188,27 +190,34 @@ namespace colloid
     {
         // TODO: Move from run
         // auto modelPath = std::filesystem::path("models") / "utah_teapot.obj";
-        auto modelPath = std::filesystem::path("models") / "suzanne.obj";
+        const auto modelPath = std::filesystem::path("models") / "suzanne.obj";
         // auto modelPath = std::filesystem::path("models") / "Cube.obj";
         ObjectParser parser;
-        auto mesh           = parser.parse(modelPath.string());
+        const auto mesh     = parser.parse(modelPath.string());
         _isRunning          = true;
         float rotationAngle = 0.0f;
 
         auto lastTime = std::chrono::steady_clock::now();
         while (_isRunning)
         {
+            auto startTime = std::chrono::steady_clock::now(); // Used for engine stats
             pollEvent();
 
-            auto currentTime      = std::chrono::steady_clock::now();
-            auto elapsed          = std::chrono::duration_cast<std::chrono::microseconds>(currentTime - lastTime);
-            const float deltaTime = static_cast<float>(elapsed.count()) / 1000.0f;
-            _mainCamera.update(deltaTime);
-            _stats.frameTime = deltaTime;
+            auto currentTime = std::chrono::steady_clock::now();
+            auto elapsed     = std::chrono::duration_cast<std::chrono::microseconds>(currentTime - lastTime);
+            float deltaTime  = static_cast<float>(elapsed.count()) * static_cast<float>(1e-3);
+            _mainCamera.update(deltaTime * 0.001f);
+            _renderer.updateView(_mainCamera.getViewMatrix());
 
+            // Stats Update Time
+            currentTime = std::chrono::steady_clock::now();
+            elapsed     = std::chrono::duration_cast<std::chrono::microseconds>(currentTime - startTime);
+            deltaTime  = static_cast<float>(elapsed.count()) * static_cast<float>(1e-3);
+            _stats.updateTime = deltaTime;
             lastTime = currentTime;
 
-            _renderer.updateView(_mainCamera.getViewMatrix());
+            auto renderStartTime = std::chrono::steady_clock::now();
+
 
             _renderer.clearScreen();
             _renderer.render(mesh, 0.0f);
@@ -218,8 +227,15 @@ namespace colloid
             renderWidgets();
             colloid::imgui::endFrame(_device, _window);
 
+            currentTime     = std::chrono::steady_clock::now();
+            elapsed         = std::chrono::duration_cast<std::chrono::microseconds>(currentTime - renderStartTime);
+            deltaTime       = static_cast<float>(elapsed.count()) * static_cast<float>(1e-3);
+            _stats.drawTime = deltaTime;
 
 
+            elapsed          = std::chrono::duration_cast<std::chrono::microseconds>(currentTime - startTime);
+            deltaTime        = static_cast<float>(elapsed.count()) * static_cast<float>(1e-3);
+            _stats.frameTime = deltaTime;
             // rotationAngle += 0.01f;
         }
 

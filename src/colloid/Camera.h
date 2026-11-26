@@ -21,7 +21,7 @@ namespace colloid
     class Camera
     {
     public:
-        static constexpr float MOVE_SENSITIVITY  = 0.01f;
+        static constexpr float MOVE_SENSITIVITY  = 10.0f;
         static constexpr float MOUSE_SENSITIVITY = 0.0f; // 0.00001f; TODO: Fix swinging
 
         [[nodiscard]] flcn::Mat4F getViewMatrix() const noexcept
